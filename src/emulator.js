@@ -40,6 +40,7 @@ function createPlayerDocument(sessionToken) {
       const sessionToken = ${token};
       const dataUrl = ${dataUrl};
       let romUrl = null;
+      let started = false;
       const makeMemoryStorage = () => {
         const entries = new Map();
         return {
@@ -64,7 +65,8 @@ function createPlayerDocument(sessionToken) {
         fail("Emulator startup failed: " + String(event.reason?.message || event.reason || "unknown error"));
       });
       window.addEventListener("message", (event) => {
-        if (event.source !== parent || event.data?.type !== "retro-start" || event.data?.token !== sessionToken) return;
+        if (started || event.source !== parent || event.data?.type !== "retro-start" || event.data?.token !== sessionToken) return;
+        started = true;
         const { bytes, core, title } = event.data;
         if (!(bytes instanceof ArrayBuffer) || !Object.hasOwn(${escapeInlineJson(CORE_BY_SYSTEM)}, core)) {
           fail("The selected game or system could not be opened.");
@@ -93,7 +95,7 @@ function createPlayerDocument(sessionToken) {
         loader.onerror = () => fail("Could not load EmulatorJS. Check your connection and try again.");
         document.head.append(loader);
         send("loading", "Loading emulator core…");
-      }, { once: true });
+      });
       send("loading", "Player ready", { playerReady: true });
     })();
   </script>

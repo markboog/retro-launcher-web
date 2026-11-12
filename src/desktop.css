@@ -35,6 +35,7 @@
 #browser-game-dialog {
   border: 0;
   background: transparent;
+  margin: auto;
   padding: 0;
   max-width: calc(100% - 24px);
 }

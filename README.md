@@ -11,7 +11,7 @@ Files you choose are read in the browser. The published site contains the licens
 
 ## Run locally
 
-Use Node.js 22.12 or newer.
+Use Node.js 22.13 or newer.
 
     npm ci
     npm test
