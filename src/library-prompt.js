@@ -1,4 +1,4 @@
-import { DEFAULT_FILE_ID, connectDrive, hasDriveConfiguration, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
+import { connectDrive, hasDriveConfiguration, libraryFileIdFromUrl, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
 
 export function driveErrorMessage(error) {
   if (error?.status === 401) return "Google Drive access expired. Reconnect to continue.";
@@ -26,8 +26,8 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   let libraryLoaded = false;
 
   function updateDownloadLink() {
-    const fileId = new URLSearchParams(window.location.hash.slice(1)).get("library") || DEFAULT_FILE_ID;
-    const valid = fileId && /^[A-Za-z0-9_-]{15,150}$/.test(fileId);
+    const fileId = libraryFileIdFromUrl();
+    const valid = Boolean(fileId);
     downloadLink.hidden = !valid;
     if (!valid) {
       downloadLink.removeAttribute("href");
@@ -94,7 +94,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
       } catch (directError) {
         if (!selectFile && (directError?.status === 403 || directError?.status === 404)) {
           showStatus("Please select the family ZIP in Google Drive to grant access…");
-          selection = await connectDrive({ selectFile: true });
+          selection = await connectDrive({ selectFile: true, existingSelection: selection });
           if (!selection) {
             canceled = true;
             showStatus("Google Drive connection canceled.");
@@ -105,8 +105,8 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
           throw directError;
         }
       }
-      rememberSelection(selection.fileId, selection.resourceKey);
       await loadArchiveFiles(files, "drive");
+      rememberSelection(selection.fileId, selection.resourceKey);
       libraryLoaded = true;
       changeButton.hidden = false;
     } catch (error) {
