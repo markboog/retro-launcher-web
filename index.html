@@ -35,6 +35,7 @@
           <div class="dropdown-entry" id="menu-run"><span class="dropdown-label"><u>R</u>un...</span></div>
           <div class="dropdown-entry" id="menu-open"><span class="dropdown-label"><u>O</u>pen Game</span><span class="dropdown-shortcut">Enter</span></div>
           <button type="button" class="dropdown-entry browser-menu-entry" id="browser-open-game"><span class="dropdown-label">Open Game File...</span></button>
+          <button type="button" class="dropdown-entry browser-menu-entry" id="browser-load-library"><span class="dropdown-label">Load Game Library...</span></button>
           <button type="button" class="dropdown-entry browser-menu-entry" id="browser-import-folder"><span class="dropdown-label">Import Game Folder...</span></button>
           <div class="dropdown-entry" id="menu-launch-native" hidden><span class="dropdown-label">Launch in <u>D</u>esktop Emulator</span></div>
           <div class="dropdown-entry" id="menu-refresh-catalog"><span class="dropdown-label"><u>R</u>efresh Catalog (Scan)</span><span class="dropdown-shortcut">F5</span></div>
@@ -426,7 +427,7 @@
 </div>
 
 <input id="browser-library-folder" type="file" webkitdirectory multiple hidden>
-<dialog id="browser-game-dialog" aria-labelledby="browser-game-title">
+<dialog class="browser-dialog" id="browser-game-dialog" aria-labelledby="browser-game-title">
   <form class="win31-dialog" id="browser-game-form">
     <div class="win31-titlebar"><div class="titlebar-center" id="browser-game-title">Open Game File</div></div>
     <div class="browser-file-body">
@@ -445,6 +446,21 @@
       <div class="browser-file-buttons">
         <button type="submit" class="win31-btn">Open</button>
         <button type="button" class="win31-btn" id="browser-cancel-game">Cancel</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+<dialog class="browser-dialog" id="browser-library-dialog" aria-labelledby="browser-library-title" aria-describedby="browser-library-intro">
+  <form method="dialog" class="win31-dialog browser-library-form">
+    <div class="win31-titlebar"><div class="titlebar-center" id="browser-library-title">Load Game Library</div></div>
+    <div class="browser-file-body">
+      <p id="browser-library-intro">Choose the games folder from your extracted family ZIP, or play the included demo.</p>
+      <p id="browser-library-error" role="alert"></p>
+      <div class="browser-file-buttons">
+        <button type="button" class="win31-btn" id="browser-connect-drive" hidden>Connect Google Drive</button>
+        <button type="button" class="win31-btn" id="browser-change-drive" hidden>Choose another ZIP</button>
+        <button type="button" class="win31-btn" id="browser-choose-folder" autofocus>Choose game folder</button>
+        <button type="submit" class="win31-btn" id="browser-library-later">Maybe later</button>
       </div>
     </div>
   </form>

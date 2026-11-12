@@ -26,21 +26,26 @@
   overflow-wrap: anywhere;
 }
 .browser-player-controls .win31-btn,
-#browser-game-form .win31-btn {
+.browser-dialog .win31-btn {
   width: auto;
   min-width: 58px;
   min-height: 22px;
   padding-inline: 6px;
 }
-#browser-game-dialog {
+.browser-dialog {
   border: 0;
   background: transparent;
   margin: auto;
   padding: 0;
   max-width: calc(100% - 24px);
+  overscroll-behavior: contain;
 }
-#browser-game-dialog::backdrop { background: #0007; }
-#browser-game-form {
+.browser-dialog::backdrop {
+  background: #0007;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.browser-dialog .win31-dialog {
   width: min(390px, calc(100vw - 24px));
   min-width: 0;
 }
@@ -58,6 +63,10 @@
   padding: 2px 6px;
 }
 .browser-file-body p { margin: 0; }
-.browser-file-buttons { display: flex; justify-content: end; gap: 6px; }
-#browser-game-error { color: #780000; }
-#browser-game-error:empty { display: none; }
+.browser-file-buttons { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
+.browser-file-buttons [hidden] { display: none; }
+.browser-library-form .browser-file-body { gap: 12px; }
+#browser-game-error,
+#browser-library-error { color: #780000; }
+#browser-game-error:empty,
+#browser-library-error:empty { display: none; }

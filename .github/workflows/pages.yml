@@ -35,6 +35,10 @@ jobs:
 
       - name: Build static site
         run: npm run build
+        env:
+          VITE_DRIVE_CLIENT_ID: ${{ vars.VITE_DRIVE_CLIENT_ID }}
+          VITE_DRIVE_PROJECT_NUMBER: ${{ vars.VITE_DRIVE_PROJECT_NUMBER }}
+          VITE_DRIVE_PICKER_KEY: ${{ secrets.VITE_DRIVE_PICKER_KEY }}
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0

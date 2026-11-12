@@ -1,0 +1,266 @@
+import { describeFile } from "./library.js";
+
+const API_ROOT = "https://www.googleapis.com/drive/v3/files/";
+const RANGE_SIZE = 2 * 1024 * 1024;
+const MAX_DIRECTORY_SIZE = 16 * 1024 * 1024;
+const MAX_GAME_SIZE = 64 * 1024 * 1024;
+const ALLOWED_FOLDERS = new Set(["gb", "gbc", "snes", "md"]);
+const SUPPORTED_METHODS = new Set([0, 8]);
+
+export class DriveLibraryError extends Error {
+  constructor(message, status = undefined) {
+    super(message);
+    this.name = "DriveLibraryError";
+    this.status = status;
+  }
+}
+
+function driveMessage(status) {
+  if (status === 401) return "Google Drive authorization expired. Reconnect your account.";
+  if (status === 403) return "Google Drive denied access. Reconnect or ask for access to this file.";
+  if (status === 404) return "The Google Drive ZIP was not found. Check the selected file.";
+  return `Google Drive returned HTTP ${status}.`;
+}
+
+function parseContentRange(value) {
+  const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(value || "");
+  if (!match) throw new DriveLibraryError("Google Drive did not return a valid byte range.");
+  return { start: Number(match[1]), end: Number(match[2]), total: Number(match[3]) };
+}
+
+function propagateSignalError(error, signal) {
+  if (signal?.aborted) throw signal.reason instanceof Error ? signal.reason : new DOMException("The operation was aborted.", "AbortError");
+  if (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) throw error;
+}
+
+async function readResponseBytes(response, expectedSize, signal) {
+  const declaredLength = response.headers.get("Content-Length");
+  if (declaredLength && (!/^\d+$/.test(declaredLength) || Number(declaredLength) !== expectedSize)) {
+    await response.body?.cancel();
+    throw new DriveLibraryError("Google Drive returned a byte range with an invalid length.");
+  }
+  if (!response.body) throw new DriveLibraryError("Google Drive returned an empty byte range.");
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      size += part.value.byteLength;
+      if (size > expectedSize) {
+        await reader.cancel();
+        throw new DriveLibraryError("Google Drive returned an overlong byte range.");
+      }
+      chunks.push(part.value);
+    }
+  } catch (error) {
+    if (error instanceof DriveLibraryError) throw error; propagateSignalError(error, signal); throw new DriveLibraryError("Google Drive returned an unreadable byte range.");
+  } finally {
+    reader.releaseLock();
+  }
+  if (size !== expectedSize) throw new DriveLibraryError("Google Drive returned a truncated byte range.");
+  if (chunks.length === 1) return chunks[0];
+  return new Uint8Array(await new Blob(chunks).arrayBuffer());
+}
+
+function directoryEntries(bytes, totalSize) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let endOffset = -1;
+  for (let offset = bytes.length - 22; offset >= Math.max(0, bytes.length - 65_557); offset -= 1) {
+    if (view.getUint32(offset, true) === 0x06054b50) {
+      const commentLength = view.getUint16(offset + 20, true);
+      if (offset + 22 + commentLength === bytes.length) {
+        endOffset = offset;
+        break;
+      }
+    }
+  }
+  if (endOffset < 0) throw new DriveLibraryError("This Google Drive file is not a supported ZIP archive.");
+
+  const disk = view.getUint16(endOffset + 4, true);
+  const directoryDisk = view.getUint16(endOffset + 6, true);
+  const diskEntries = view.getUint16(endOffset + 8, true);
+  const entryCount = view.getUint16(endOffset + 10, true);
+  const directorySize = view.getUint32(endOffset + 12, true);
+  const directoryOffset = view.getUint32(endOffset + 16, true);
+  if (disk || directoryDisk || diskEntries !== entryCount || entryCount === 0xffff || directorySize === 0xffffffff ||
+      directoryOffset === 0xffffffff || directoryOffset + directorySize > totalSize) {
+    throw new DriveLibraryError("This ZIP uses a layout that the browser library cannot read.");
+  }
+  if (directorySize > MAX_DIRECTORY_SIZE) throw new DriveLibraryError("The ZIP directory is too large to read safely.");
+  return { count: entryCount, offset: directoryOffset, size: directorySize };
+}
+
+function parseEntries(bytes, expectedCount) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const decoder = new TextDecoder("utf-8");
+  const entries = [];
+  let offset = 0;
+  let records = 0;
+  while (offset + 46 <= bytes.length && records < expectedCount) {
+    if (view.getUint32(offset, true) !== 0x02014b50) throw new DriveLibraryError("The ZIP directory is malformed.");
+    const flags = view.getUint16(offset + 8, true);
+    const method = view.getUint16(offset + 10, true);
+    const crc = view.getUint32(offset + 16, true);
+    const compressedSize = view.getUint32(offset + 20, true);
+    const size = view.getUint32(offset + 24, true);
+    const nameLength = view.getUint16(offset + 28, true);
+    const extraLength = view.getUint16(offset + 30, true);
+    const commentLength = view.getUint16(offset + 32, true);
+    const localOffset = view.getUint32(offset + 42, true);
+    const recordLength = 46 + nameLength + extraLength + commentLength;
+    if (offset + recordLength > bytes.length) throw new DriveLibraryError("The ZIP directory is truncated.");
+    const name = decoder.decode(bytes.subarray(offset + 46, offset + 46 + nameLength)).replaceAll("\\", "/");
+    if (!(flags & 1) && SUPPORTED_METHODS.has(method) && size > 0 && size <= MAX_GAME_SIZE && compressedSize <= MAX_GAME_SIZE && localOffset !== 0xffffffff) {
+      entries.push({ name, size, compressedSize, crc, method, localOffset });
+    }
+    offset += recordLength;
+    records += 1;
+  }
+  if (records !== expectedCount) throw new DriveLibraryError("The ZIP directory entry count is inconsistent.");
+  return entries;
+}
+
+function safeGamePath(name) {
+  const parts = name.replaceAll("\\", "/").split("/");
+  if (parts.some((part) => part === ".." || part === ".") || parts.length < 3 || parts.length > 4) return false;
+  const gameIndex = parts.length === 4 ? 1 : 0;
+  return parts[gameIndex].toLowerCase() === "games" && ALLOWED_FOLDERS.has((parts[gameIndex + 1] || "").toLowerCase()) && Boolean(parts.at(-1)) && !parts.at(-1).endsWith("/");
+}
+
+const CRC_TABLE = Uint32Array.from({ length: 256 }, (_, index) => {
+  let value = index;
+  for (let bit = 0; bit < 8; bit += 1) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+  return value >>> 0;
+});
+
+function updateCrc(crc, bytes) {
+  let value = crc;
+  for (const byte of bytes) value = CRC_TABLE[(value ^ byte) & 0xff] ^ (value >>> 8);
+  return value >>> 0;
+}
+
+export async function openDriveLibrary({ fileId, resourceKey, getToken, signal }) {
+  if (!fileId || typeof getToken !== "function") throw new DriveLibraryError("A Drive file and access token are required.");
+  if (signal?.aborted) propagateSignalError(undefined, signal);
+  const url = new URL(encodeURIComponent(fileId), API_ROOT);
+  url.searchParams.set("alt", "media");
+  const headersFor = async (range, requestSignal) => {
+    if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+    const token = await getToken();
+    if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+    if (typeof token !== "string" || !token) throw new DriveLibraryError("Google Drive authorization is unavailable.");
+    const headers = new Headers({ Authorization: `Bearer ${token}` });
+    if (range) headers.set("Range", range);
+    if (resourceKey) headers.set("X-Goog-Drive-Resource-Keys", `${fileId}/${resourceKey}`);
+    return headers;
+  };
+
+  const metadataUrl = new URL(encodeURIComponent(fileId), API_ROOT);
+  metadataUrl.searchParams.set("fields", "size,capabilities(canDownload)");
+  const metadataHeaders = await headersFor(undefined, signal);
+  let metadataResponse;
+  try {
+    metadataResponse = await fetch(metadataUrl, { headers: metadataHeaders, signal });
+  } catch (error) {
+    propagateSignalError(error, signal); throw new DriveLibraryError("Could not reach Google Drive.");
+  }
+  if (!metadataResponse.ok) throw new DriveLibraryError(driveMessage(metadataResponse.status), metadataResponse.status);
+  let metadata;
+  try {
+    metadata = await metadataResponse.json();
+  } catch (error) {
+    propagateSignalError(error, signal); throw new DriveLibraryError("Google Drive returned invalid file metadata.");
+  }
+  if (!metadata || typeof metadata !== "object") throw new DriveLibraryError("Google Drive returned invalid file metadata.");
+  const totalSize = Number(metadata.size);
+  if (!Number.isSafeInteger(totalSize) || totalSize <= 0 || metadata.capabilities?.canDownload === false) throw new DriveLibraryError("This Google Drive file is empty or cannot be downloaded.");
+
+  async function readRange(start, endExclusive, requestSignal) {
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(endExclusive) || start < 0 || endExclusive <= start || endExclusive > totalSize) throw new DriveLibraryError("The ZIP requested an invalid byte range.");
+    const chunks = [];
+    for (let position = start; position < endExclusive;) {
+      const end = Math.min(position + RANGE_SIZE, endExclusive);
+      const headers = await headersFor(`bytes=${position}-${end - 1}`, requestSignal);
+      let response;
+      try {
+        response = await fetch(url, { headers, signal: requestSignal });
+      } catch (error) {
+        propagateSignalError(error, requestSignal); throw new DriveLibraryError("Could not reach Google Drive.");
+      }
+      if (response.status !== 206) { await response.body?.cancel(); throw new DriveLibraryError(driveMessage(response.status), response.status); }
+      const contentRange = response.headers.get("Content-Range");
+      if (contentRange) {
+        try {
+          const range = parseContentRange(contentRange);
+          if (range.start !== position || range.end !== end - 1 || range.total !== totalSize) {
+            throw new DriveLibraryError("Google Drive returned an incomplete or inconsistent byte range.");
+          }
+        } catch (error) {
+          await response.body?.cancel(); throw error;
+        }
+      }
+      const body = await readResponseBytes(response, end - position, requestSignal);
+      chunks.push(body);
+      position = end;
+    }
+    if (chunks.length === 1) return chunks[0];
+    return new Uint8Array(await new Blob(chunks).arrayBuffer());
+  }
+
+  const tailStart = Math.max(0, totalSize - 65_557);
+  const tail = await readRange(tailStart, totalSize, signal);
+  const directory = directoryEntries(tail, totalSize);
+  if (directory.count === 0) return [];
+  const rawDirectory = await readRange(directory.offset, directory.offset + directory.size, signal);
+  const candidates = parseEntries(rawDirectory, directory.count)
+    .filter((entry) => safeGamePath(entry.name))
+    .filter((entry) => {
+      try {
+        describeFile({ name: entry.name.split("/").at(-1), size: entry.size, webkitRelativePath: entry.name });
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+  return candidates.map((entry) => {
+    const name = entry.name.split("/").at(-1);
+    return {
+      name,
+      size: entry.size,
+      webkitRelativePath: entry.name,
+      async load(loadSignal) {
+        const requestSignal = loadSignal;
+        const local = await readRange(entry.localOffset, entry.localOffset + 30, requestSignal);
+        const localView = new DataView(local.buffer, local.byteOffset, local.byteLength);
+        if (localView.getUint32(0, true) !== 0x04034b50) throw new DriveLibraryError("The ZIP entry header is malformed.");
+        const dataStart = entry.localOffset + 30 + localView.getUint16(26, true) + localView.getUint16(28, true);
+        const compressed = await readRange(dataStart, dataStart + entry.compressedSize, requestSignal);
+        const source = new Blob([compressed]);
+        const output = entry.method === 0 ? source.stream() : source.stream().pipeThrough(new DecompressionStream("deflate-raw"));
+        const reader = output.getReader();
+        const outputChunks = [];
+        let size = 0;
+        let crc = 0xffffffff;
+        try {
+          while (true) {
+            const part = await reader.read();
+            if (part.done) break;
+            size += part.value.byteLength;
+            if (size > entry.size || size > MAX_GAME_SIZE) throw new DriveLibraryError("The ZIP entry expanded beyond its declared size.");
+            crc = updateCrc(crc, part.value);
+            outputChunks.push(part.value);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+        if (size !== entry.size || ((crc ^ 0xffffffff) >>> 0) !== entry.crc) {
+          throw new DriveLibraryError("The ZIP entry failed its size or checksum check.");
+        }
+        return new Blob(outputChunks);
+      },
+    };
+  });
+}

@@ -1,6 +1,7 @@
 import "./desktop.css";
 import { describeFile, SYSTEMS } from "./library.js";
 import { installLegacyApi } from "./legacy-api.js";
+import { driveErrorMessage, setupLibraryPrompt } from "./library-prompt.js";
 
 const demo = {
   id: "browser_snake",
@@ -13,6 +14,7 @@ const demo = {
   url: new URL("./demo/snake.gb", document.baseURI).href,
 };
 const catalog = new Map([[demo.id, demo]]);
+const driveGameIds = new Set();
 const folderInput = document.getElementById("browser-library-folder");
 const singleDialog = document.getElementById("browser-game-dialog");
 const fileForm = document.getElementById("browser-game-form");
@@ -20,24 +22,27 @@ const fileInput = document.getElementById("browser-game-file");
 const systemInput = document.getElementById("browser-game-system");
 const fileError = document.getElementById("browser-game-error");
 const browserStatus = () => document.getElementById("status-selection");
+const showStatus = (message) => { browserStatus().textContent = message; };
 const windowId = "browser-game-player";
 
 window.retroBrowserArtwork = (id) => id === demo.id
   ? new URL("./demo/source/images/screenshot_bw.png", document.baseURI).href
   : null;
 
-async function browserGame(file, system) {
-  const info = describeFile(file, system);
-  const input = new TextEncoder().encode(info.id);
+async function browserGame(source, system) {
+  const { file, ...info } = describeFile(source, system);
+  const fromDrive = typeof source.load === "function";
+  const input = new TextEncoder().encode(fromDrive ? "drive:" + info.id : info.id);
   const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
   const id = "browser_" + Array.from(bytes.slice(0, 12), (byte) => byte.toString(16).padStart(2, "0")).join("");
   return {
     ...info,
+    ...(fromDrive ? { loadFile: (signal) => source.load(signal) } : { file }),
     id,
     platform: info.system === "segaMD" ? "md" : info.system,
     filename: file.name,
     genre: "Classic",
-    desc: "Local " + SYSTEMS[info.system] + " game.",
+    desc: SYSTEMS[info.system] + (fromDrive ? " game from Google Drive." : " game from this device."),
   };
 }
 
@@ -70,19 +75,25 @@ async function play(game, setupMode) {
   controls.append(progress, stop);
   win.client.append(display, controls);
 
+  const controller = new AbortController();
   const session = { player: null, release: null };
   activeSession = session;
   window.registerWindowCleanup(windowId, () => {
+    controller.abort();
     session.player?.stop();
     session.release?.();
     if (activeSession === session) activeSession = null;
   });
 
   try {
-    const { startGame } = await import("./emulator.js");
+    if (game.loadFile) progress.textContent = "Loading game from Google Drive…";
+    const fileRequest = game.loadFile
+      ? game.loadFile(AbortSignal.any([controller.signal, AbortSignal.timeout(45_000)]))
+      : game.file;
+    const [{ startGame }, file] = await Promise.all([import("./emulator.js"), fileRequest]);
     if (activeSession !== session) return { success: false, message: "The player was closed." };
-    const url = game.file ? URL.createObjectURL(game.file) : game.url;
-    if (game.file) session.release = () => URL.revokeObjectURL(url);
+    const url = file ? URL.createObjectURL(file) : game.url;
+    if (file) session.release = () => URL.revokeObjectURL(url);
 
     const handle = await startGame({
       container: display, system: game.system, title: game.title, url,
@@ -96,7 +107,9 @@ async function play(game, setupMode) {
     else handle.stop();
     return { success: true, message: "Opened " + game.title + " in the browser player" };
   } catch (error) {
-    progress.textContent = error instanceof Error ? error.message : "The game player could not start.";
+    if (activeSession !== session) return { success: false, message: "The player was closed." };
+    progress.textContent = game.loadFile ? driveErrorMessage(error)
+      : error instanceof Error ? error.message : "The game player could not start.";
     return { success: false, message: progress.textContent };
   }
 }
@@ -110,6 +123,18 @@ const api = installLegacyApi({
 async function refreshLibrary() {
   api.replaceLibrary(Array.from(catalog.values()));
   await window.retroReloadCatalog();
+}
+
+async function loadDriveFiles(files) {
+  const games = await Promise.all(files.map((file) => browserGame(file)));
+  for (const id of driveGameIds) catalog.delete(id);
+  driveGameIds.clear();
+  for (const game of games) {
+    catalog.set(game.id, game);
+    driveGameIds.add(game.id);
+  }
+  await refreshLibrary();
+  showStatus(`Loaded ${games.length} ${games.length === 1 ? "game" : "games"} from Google Drive.`);
 }
 
 folderInput.addEventListener("change", async () => {
@@ -158,4 +183,5 @@ function loadClassicScript(filename) {
 
 loadClassicScript("win31_apps.js")
   .then(() => loadClassicScript("win31.js"))
+  .then(() => setupLibraryPrompt({ chooseFolder: () => folderInput.click(), loadDriveFiles, showStatus }))
   .catch((error) => { browserStatus().textContent = error.message; });
