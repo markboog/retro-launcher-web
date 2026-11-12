@@ -1,4 +1,4 @@
-import { connectDrive, hasDriveConfiguration, prepareDriveConnection } from "./drive-auth.js";
+import { connectDrive, hasDriveConfiguration, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
 
 export function driveErrorMessage(error) {
   if (error?.status === 401) return "Google Drive access expired. Reconnect to continue.";
@@ -35,7 +35,11 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
     const url = new URL("https://drive.google.com/uc?export=download");
     url.searchParams.set("id", fileId);
     downloadLink.href = url.href;
-    intro.textContent = "Download the family ZIP from Google Drive. When it finishes, return here and open the ZIP from Downloads.";
+    if (hasDriveConfiguration) {
+      intro.textContent = "Connect Google Drive to load the family game library directly, or download the ZIP to open it from this device.";
+    } else {
+      intro.textContent = "Download the family ZIP from Google Drive. When it finishes, return here and open the ZIP from Downloads.";
+    }
   }
 
   async function prepare() {
@@ -58,7 +62,10 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
     errorText.textContent = message;
     dialog.returnValue = "";
     dialog.showModal();
-    if (!message && !downloadLink.hidden) downloadLink.focus();
+    if (!message) {
+      if (hasDriveConfiguration && !connectButton.hidden) connectButton.focus();
+      else if (!downloadLink.hidden) downloadLink.focus();
+    }
     if (hasDriveConfiguration && !ready && !connectButton.disabled) void prepare();
   }
 
@@ -75,7 +82,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
     let message = "";
     let canceled = false;
     try {
-      const selection = await connectDrive({ selectFile });
+      let selection = await connectDrive({ selectFile });
       if (!selection) {
         canceled = true;
         showStatus("Google Drive connection canceled.");
@@ -83,7 +90,24 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
       }
       showStatus("Reading the game library from Google Drive…");
       const { openDriveLibrary } = await import("./drive-library.js");
-      const files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
+      let files;
+      try {
+        files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
+      } catch (directError) {
+        if (!selectFile && (directError?.status === 403 || directError?.status === 404)) {
+          showStatus("Please select the family ZIP in Google Drive to grant access…");
+          selection = await connectDrive({ selectFile: true });
+          if (!selection) {
+            canceled = true;
+            showStatus("Google Drive connection canceled.");
+            return;
+          }
+          files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
+        } else {
+          throw directError;
+        }
+      }
+      rememberSelection(selection.fileId, selection.resourceKey);
       await loadArchiveFiles(files, "drive");
       libraryLoaded = true;
       changeButton.hidden = false;

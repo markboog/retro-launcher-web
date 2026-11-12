@@ -110,11 +110,11 @@ function requestAccessToken({ prompt = "" } = {}) {
   });
 }
 
-function rememberSelection(fileId, resourceKey) {
+export function rememberSelection(fileId, resourceKey) {
   try { window.localStorage?.setItem(SELECTION_KEY, JSON.stringify({ fileId, resourceKey: resourceKey || null })); } catch { /* Storage is optional. */ }
 }
 
-function readRememberedSelection() {
+export function readRememberedSelection() {
   try {
     const value = JSON.parse(window.localStorage?.getItem(SELECTION_KEY) || "null");
     if (typeof value?.fileId === "string" && value.fileId.trim()) {
@@ -139,6 +139,11 @@ export async function connectDrive({ selectFile = false } = {}) {
   };
 
   if (!selectFile) {
+    const urlParams = new URLSearchParams(window.location.hash.slice(1));
+    const urlFileId = urlParams.get("library");
+    if (urlFileId && /^[A-Za-z0-9_-]{15,150}$/.test(urlFileId)) {
+      return { fileId: urlFileId, resourceKey: null, getToken };
+    }
     const remembered = readRememberedSelection();
     if (remembered) return { ...remembered, getToken };
   }
