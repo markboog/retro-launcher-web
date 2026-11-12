@@ -1,0 +1,62 @@
+.browser-player-client {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.browser-menu-entry {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.browser-player-display {
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+.browser-player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px;
+  border-top: 1px solid #808080;
+  overflow-wrap: anywhere;
+}
+.browser-player-controls .win31-btn,
+#browser-game-form .win31-btn {
+  width: auto;
+  min-width: 58px;
+  min-height: 22px;
+  padding-inline: 6px;
+}
+#browser-game-dialog {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  max-width: calc(100% - 24px);
+}
+#browser-game-dialog::backdrop { background: #0007; }
+#browser-game-form {
+  width: min(390px, calc(100vw - 24px));
+  min-width: 0;
+}
+.browser-file-body {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+.browser-file-body input { max-width: 100%; }
+.browser-file-body input::file-selector-button {
+  font: inherit;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #fff #333 #333 #fff;
+  padding: 2px 6px;
+}
+.browser-file-body p { margin: 0; }
+.browser-file-buttons { display: flex; justify-content: end; gap: 6px; }
+#browser-game-error { color: #780000; }
+#browser-game-error:empty { display: none; }

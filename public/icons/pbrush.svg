@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- Paintbrush Palette Icon -->
+  <path d="M 16,3 C 8,3 3,9 3,17 C 3,24 8,29 16,29 C 19,29 21,27 21,25 C 21,24 20,23 20,22 C 20,20 22,18 24,18 C 27,18 29,15 29,12 C 29,6 23,3 16,3 Z" fill="#e0d0b0" stroke="#000" stroke-width="1"/>
+  <!-- Paint dabs -->
+  <circle cx="8" cy="12" r="2.5" fill="#ff0000"/>
+  <circle cx="12" cy="7" r="2.5" fill="#0000ff"/>
+  <circle cx="18" cy="7" r="2.5" fill="#00bb00"/>
+  <circle cx="23" cy="11" r="2.5" fill="#ffff00"/>
+  <!-- Thumb hole -->
+  <circle cx="15" cy="23" r="3" fill="#008080" stroke="#000"/>
+  <!-- Brush handle -->
+  <line x1="26" y1="2" x2="16" y2="20" stroke="#8b4513" stroke-width="3"/>
+  <line x1="16" y1="20" x2="14" y2="23" stroke="#silver" stroke-width="3"/>
+  <polygon points="14,23 11,26 13,27 15,24" fill="#000"/>
+</svg>

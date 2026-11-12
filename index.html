@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Program Manager - Retro Game Suite 3.11</title>
+  <link rel="stylesheet" href="/win31.css"><link rel="icon" href="/favicon.ico">
+</head>
+<body>
+
+<div id="desktop">
+
+  <!-- ======================================================================
+       PROGRAM MANAGER SHELL
+       ====================================================================== -->
+  <div id="program-manager" class="win31-frame">
+
+    <!-- Program Manager Titlebar -->
+    <div class="win31-titlebar" id="main-titlebar">
+      <div class="win31-btn sys-btn" id="main-sys-btn" title="Control">
+        <span class="sys-hyphen"></span>
+      </div>
+      <div class="titlebar-center">Program Manager - [Retro Game Suite 3.11]</div>
+      <div class="titlebar-controls">
+        <div class="win31-btn min-btn" id="main-min-btn" title="Minimize"></div>
+        <div class="win31-btn max-btn" id="main-max-btn" title="Maximize"></div>
+      </div>
+    </div>
+
+    <!-- Menu Bar -->
+    <div class="win31-menubar">
+      <!-- File Menu -->
+      <div class="menu-item" data-menu="file-menu"><u>F</u>ile
+        <div class="dropdown-menu" id="file-menu">
+          <div class="dropdown-entry" id="menu-run"><span class="dropdown-label"><u>R</u>un...</span></div>
+          <div class="dropdown-entry" id="menu-open"><span class="dropdown-label"><u>O</u>pen Game</span><span class="dropdown-shortcut">Enter</span></div>
+          <button type="button" class="dropdown-entry browser-menu-entry" id="browser-open-game"><span class="dropdown-label">Open Game File...</span></button>
+          <button type="button" class="dropdown-entry browser-menu-entry" id="browser-import-folder"><span class="dropdown-label">Import Game Folder...</span></button>
+          <div class="dropdown-entry" id="menu-launch-native" hidden><span class="dropdown-label">Launch in <u>D</u>esktop Emulator</span></div>
+          <div class="dropdown-entry" id="menu-refresh-catalog"><span class="dropdown-label"><u>R</u>efresh Catalog (Scan)</span><span class="dropdown-shortcut">F5</span></div>
+          <div class="dropdown-entry" id="menu-downloader" hidden><span class="dropdown-label"><u>A</u>rchive.org Downloader...</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-entry" id="menu-properties"><span class="dropdown-label"><u>P</u>roperties...</span><span class="dropdown-shortcut">Alt+Enter</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-entry" id="menu-exit"><span class="dropdown-label">E<u>x</u>it Windows...</span></div>
+        </div>
+      </div>
+
+      <!-- Options Menu -->
+      <div class="menu-item" data-menu="options-menu"><u>O</u>ptions
+        <div class="dropdown-menu" id="options-menu">
+          <div class="dropdown-entry" id="menu-auto-arrange"><span class="dropdown-label">✓ <u>A</u>uto Arrange</span></div>
+          <div class="dropdown-entry" id="menu-toggle-sound"><span class="dropdown-label">✓ <u>S</u>ound Effects</span></div>
+          <div class="dropdown-entry" id="menu-toggle-scanlines"><span class="dropdown-label">CRT <u>S</u>canlines</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-entry" id="menu-save-settings"><span class="dropdown-label">Save Settings on E<u>x</u>it</span></div>
+        </div>
+      </div>
+
+      <!-- Window Menu -->
+      <div class="menu-item" data-menu="window-menu"><u>W</u>indow
+        <div class="dropdown-menu" id="window-menu">
+          <div class="dropdown-entry" id="menu-cascade"><span class="dropdown-label"><u>C</u>ascade</span><span class="dropdown-shortcut">Shift+F5</span></div>
+          <div class="dropdown-entry" id="menu-tile-h"><span class="dropdown-label">Tile <u>H</u>orizontally</span><span class="dropdown-shortcut">Shift+F4</span></div>
+          <div class="dropdown-entry" id="menu-tile-v"><span class="dropdown-label">Tile <u>V</u>ertically</span></div>
+          <div class="dropdown-entry" id="menu-arrange-icons"><span class="dropdown-label"><u>A</u>rrange Icons</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-entry" data-open-group="dos"><span class="dropdown-label">1 MS-DOS Classics</span></div>
+          <div class="dropdown-entry" data-open-group="win31_classics"><span class="dropdown-label">2 Windows 3.1 Win16 Classics</span></div>
+          <div class="dropdown-entry" data-open-group="snes"><span class="dropdown-label">3 Super Nintendo (SNES)</span></div>
+          <div class="dropdown-entry" data-open-group="win31_accessories"><span class="dropdown-label">4 Accessories & Main</span></div>
+          <div class="dropdown-entry" data-open-group="shareware_cds"><span class="dropdown-label">5 Shareware CD-ROMs</span></div>
+          <div class="dropdown-entry" data-open-group="gb_gbc"><span class="dropdown-label">6 Game Boy & GBC</span></div>
+          <div class="dropdown-entry" data-open-group="sega_arcade"><span class="dropdown-label">7 Sega Genesis & Arcade</span></div>
+          <div class="dropdown-entry" data-open-group="gemini"><span class="dropdown-label">8 Google & Gemini Workspace</span></div>
+          <div class="dropdown-entry" data-open-group="favorites"><span class="dropdown-label">9 Favorites</span></div>
+        </div>
+      </div>
+
+      <!-- Help Menu -->
+      <div class="menu-item" data-menu="help-menu"><u>H</u>elp
+        <div class="dropdown-menu" id="help-menu">
+          <div class="dropdown-entry" id="menu-help-contents"><span class="dropdown-label"><u>C</u>ontents & Controls...</span></div>
+          <div class="dropdown-entry" id="menu-sirius-booklet"><span class="dropdown-label"><u>S</u>irius 5-Foot 10-Pack Booklet (PDF)...</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-entry" id="menu-about"><span class="dropdown-label"><u>A</u>bout Program Manager...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Toolbar & Instant Search -->
+    <div class="win31-toolbar">
+      <button class="tool-btn" data-open-group="dos">
+        <img src="icons/floppy.svg" width="16" height="16" alt=""> DOS Classics
+      </button>
+      <button class="tool-btn" data-open-group="win31_classics">
+        <img src="icons/winlogo.svg" width="16" height="16" alt=""> Win16 Games
+      </button>
+      <button class="tool-btn" data-open-group="snes">
+        <img src="icons/snes.svg" width="16" height="16" alt=""> SNES (<span id="snes-toolbar-count">0</span>)
+      </button>
+      <button class="tool-btn" data-open-group="win31_accessories">
+        <img src="icons/pbrush.svg" width="16" height="16" alt=""> Accessories
+      </button>
+      <button class="tool-btn" data-open-group="shareware_cds">
+        <img src="icons/cdrom.svg" width="16" height="16" alt=""> Shareware CDs
+      </button>
+      <button class="tool-btn" data-open-group="gb_gbc">
+        <img src="icons/gameboy.svg" width="16" height="16" alt=""> Game Boy
+      </button>
+      <button class="tool-btn" data-open-group="sega_arcade">
+        <img src="icons/genesis.svg" width="16" height="16" alt=""> Sega & Arcade
+      </button>
+      <button class="tool-btn" data-open-group="gemini">
+        <img src="icons/folder.svg" width="16" height="16" alt=""> Gemini
+      </button>
+      <button class="tool-btn" data-open-group="favorites">
+        ★ Favorites (<span id="fav-count">0</span>)
+      </button>
+      <button class="tool-btn" id="toolbar-downloader-btn" hidden title="Download Free Games from Archive.org">
+        📥 Get Games
+      </button>
+
+      <!-- Instant Filter Bar -->
+      <div class="search-container">
+        <label for="platform-select" style="font-size:11px;">Filter:</label>
+        <select id="platform-select" class="win31-select">
+          <option value="ALL">All Platforms</option>
+          <option value="dos">MS-DOS Classics</option>
+          <option value="win31">Windows 3.1 Win16</option>
+          <option value="snes">Super Nintendo (SNES)</option>
+          <option value="gb">Game Boy</option>
+          <option value="gbc">Game Boy Color</option>
+          <option value="md">Sega Genesis</option>
+          <option value="mame">Arcade (MAME)</option>
+          <option value="shareware_cds">Shareware CDs</option>
+          <option value="favorites">★ Favorites Only</option>
+          <option value="recent">Recently Played</option>
+        </select>
+
+        <input type="text" id="game-search" class="win31-input" aria-label="Search games" placeholder="Search (Ctrl+F)..." style="width: 140px;">
+        <button class="tool-btn" id="search-clear-btn" aria-label="Clear search and platform filter" title="Clear Search">✕</button>
+      </div>
+    </div>
+
+    <!-- MDI Workspace where group windows live -->
+    <div id="mdi-workspace">
+
+      <!-- Minimized Icons Shelf at bottom of Program Manager -->
+      <div class="minimized-icons-shelf" id="minimized-shelf"></div>
+
+    </div>
+
+    <!-- Status Bar -->
+    <div class="win31-statusbar">
+      <div class="status-panel" id="status-text">Ready</div>
+      <div class="status-panel flex" id="status-selection">Open Game Boy for the demo, or choose File → Import Game Folder.</div>
+      <div class="status-panel" id="status-total-games">1,044 Games</div>
+      <div class="status-panel">Memory: 634,816 KB Free</div>
+      <div class="status-panel">386 Enhanced Mode</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ======================================================================
+     WINDOWS 3.1 DIALOGS & MODALS
+     ====================================================================== -->
+
+<!-- Properties Dialog -->
+<div class="modal-overlay" id="properties-modal">
+  <div class="win31-dialog" style="width: 480px;">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeProperties()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center">Properties</div>
+      <div class="win31-btn close-btn" onclick="closeProperties()"></div>
+    </div>
+    <div class="dialog-content">
+      <div style="display: flex; gap: 16px; margin-bottom: 12px; align-items: center;">
+        <img id="prop-icon" src="icons/snes.svg" width="48" height="48" alt="">
+        <div>
+          <div id="prop-title" style="font-size: 14px; font-weight: bold;">Game Title</div>
+          <div id="prop-platform" style="color: #444; font-size: 11px;">Platform: Super Nintendo</div>
+        </div>
+      </div>
+
+      <fieldset class="dialog-fieldset">
+        <legend>Information</legend>
+        <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+          <tr><td style="width: 90px; color:#444;">Genre:</td><td id="prop-genre" style="font-weight:bold;">Platformer</td></tr>
+          <tr><td style="color:#444;">Developer:</td><td id="prop-dev">Nintendo</td></tr>
+          <tr><td style="color:#444;">Release Year:</td><td id="prop-year">1992</td></tr>
+          <tr><td style="color:#444;">File / ROM:</td><td id="prop-file" style="word-break:break-all; font-family:monospace;">game.smc</td></tr>
+          <tr><td style="color:#444;">Description:</td><td id="prop-desc">Game description</td></tr>
+        </table>
+      </fieldset>
+
+      <fieldset class="dialog-fieldset">
+        <legend>Controls Guide</legend>
+        <div style="font-size: 11px; line-height: 1.4;">
+          <strong>Arrow Keys:</strong> D-Pad Directional Movement<br>
+          <strong>Z / X / A / S:</strong> Action Buttons (B, A, Y, X)<br>
+          <strong>Enter / Space:</strong> Start / Select<br>
+          <strong>Gamepads:</strong> Standard USB & Bluetooth controllers supported natively!
+        </div>
+      </fieldset>
+
+      <div class="dialog-buttons">
+        <button class="dialog-btn default" id="prop-launch-btn">Launch Native</button>
+        <button class="dialog-btn" onclick="closeProperties()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Run Dialog -->
+<div class="modal-overlay" id="run-modal">
+  <div class="win31-dialog" style="width: 380px;">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeRun()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center">Run</div>
+      <div class="win31-btn close-btn" onclick="closeRun()"></div>
+    </div>
+    <div class="dialog-content">
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom: 12px;">
+        <img src="icons/progman.svg" width="32" height="32" alt="">
+        <div>
+          Type the name of a game, executable, or filter query to run in Windows 3.1:
+        </div>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label for="run-command-input" style="font-weight:bold; display:block; margin-bottom:4px;"><u>C</u>ommand Line:</label>
+        <input type="text" id="run-command-input" class="win31-input" style="width: 100%;" placeholder="e.g. doom, skifree, jezzball, keen1, mario">
+      </div>
+      <div class="dialog-buttons">
+        <button class="dialog-btn default" id="run-submit-btn">OK</button>
+        <button class="dialog-btn" onclick="closeRun()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About Program Manager Dialog -->
+<div class="modal-overlay" id="about-modal">
+  <div class="win31-dialog" style="width: 440px;">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeAbout()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center">About Program Manager</div>
+      <div class="win31-btn close-btn" onclick="closeAbout()"></div>
+    </div>
+    <div class="dialog-content">
+      <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 14px;">
+        <img src="icons/winlogo.svg" width="56" height="56" alt="Windows 3.1">
+        <div>
+          <div style="font-size: 15px; font-weight: bold;">Microsoft Windows</div>
+          <div style="font-size: 12px; color: #444;">Version 3.11 (Retro Gaming Suite Edition)</div>
+          <div style="font-size: 11px; margin-top: 4px;">Copyright © 1985-1993 Microsoft Corp.</div>
+          <div style="font-size: 11px; color:#555;">Super Nintendo • MS-DOS • Win16 • Game Boy • Genesis • MAME</div>
+        </div>
+      </div>
+
+      <fieldset class="dialog-fieldset">
+        <legend>System Resources</legend>
+        <div style="font-size: 11px; line-height: 1.5;">
+          Retro Launcher Browser Edition<br>
+          Total Games Preserved: <strong id="about-games-count">1,044 Classic Titles</strong><br>
+          Native Emulators: <strong>Snes9x 1.63, DOSBox Staging v0.83, mGBA 0.10.5, Mednafen 1.32, WineVDM (otvdm)</strong><br>
+          Game Artwork: <strong>Libretro Boxarts</strong><br>
+          Built-in Windows 3.1 Apps: <strong>Minesweeper, Solitaire, Paintbrush, Notepad, Calculator, Clock, MS-DOS Prompt, Real File Manager, Archive Downloader</strong><br>
+          Memory Available to Windows: <strong>634,816 KB</strong><br>
+          Operating Mode: <strong>386 Enhanced Mode with 32-bit Disk Access</strong>
+        </div>
+      </fieldset>
+
+      <div class="dialog-buttons">
+        <button class="dialog-btn default" onclick="closeAbout()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Archive.org Game Downloader Dialog -->
+<div class="modal-overlay" id="archive-modal">
+  <div class="win31-dialog" style="width: 680px; height: 500px; display: flex; flex-direction: column;">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeArchiveDownloader()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center">Archive.org Free Game Downloader & Installer</div>
+      <div class="win31-btn close-btn" onclick="closeArchiveDownloader()"></div>
+    </div>
+    <div class="dialog-content" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+      <div style="display:flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+        <label for="archive-search-input" style="font-weight:bold;">Search:</label>
+        <input type="text" id="archive-search-input" class="win31-input" style="flex-grow: 1;" placeholder="e.g. pacman, tetris, simcity, lemmings, ski, space">
+        <select id="archive-collection-select" class="win31-select" style="width: 170px;">
+          <option value="softwarelibrary_msdos_games">MS-DOS Games</option>
+          <option value="softwarelibrary_win3">Windows 3.x Games</option>
+          <option value="cdbbsarchive">Shareware CDs</option>
+        </select>
+        <button class="dialog-btn default" id="archive-search-btn">Search</button>
+      </div>
+
+      <div id="archive-status" style="font-size: 11px; color: #444; margin-bottom: 6px;">Ready to search millions of preserved games.</div>
+
+      <!-- Results Table -->
+      <div style="flex-grow: 1; border: 1px solid #808080; background: #fff; overflow-y: auto;" id="archive-results-container">
+        <table class="archive-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+          <thead style="background: #c0c0c0; position: sticky; top: 0; border-bottom: 1px solid #808080;">
+            <tr>
+              <th style="text-align: left; padding: 4px;">Title</th>
+              <th style="width: 60px; text-align: center; padding: 4px;">Year</th>
+              <th style="width: 80px; text-align: center; padding: 4px;">Downloads</th>
+              <th style="width: 100px; text-align: center; padding: 4px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="archive-results-body">
+            <tr><td colspan="4" style="text-align: center; padding: 30px; color: #888;">Type a query and press Search to find free games!</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Progress bar -->
+      <div id="archive-progress-container" style="display: none; margin-top: 10px;" aria-live="polite">
+        <div style="font-size: 11px; margin-bottom: 4px;" id="archive-progress-text">Downloading...</div>
+        <div class="win31-progress-bar" id="archive-progress-track" role="progressbar" aria-label="Archive installation progress" aria-valuetext="Waiting to start">
+          <div class="win31-progress-fill" id="archive-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="dialog-buttons" style="margin-top: 10px;">
+        <button class="dialog-btn" onclick="closeArchiveDownloader()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Real File Manager Dialog -->
+<div id="launch-indicator-box" role="status" aria-live="polite">
+  <div class="launch-indicator-title" id="launch-indicator-title">Starting Application...</div>
+  <div class="launch-indicator-content">
+    <div class="launch-spinner">⏳</div>
+    <div>
+      <div id="launch-game-name" style="font-weight:bold; font-size:12px; margin-bottom: 4px;">Application</div>
+      <div style="font-size:11px; color:#444;" id="launch-subtext">Loading emulator into foreground...</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="filemanager-modal">
+  <div class="win31-dialog" style="width: 720px; height: 480px; display: flex; flex-direction: column;">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeFileManager()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center">File Manager - [C:\GAMES\*.*]</div>
+      <div class="win31-btn close-btn" onclick="closeFileManager()"></div>
+    </div>
+    <div class="win31-menubar">
+      <div class="menu-item"><u>F</u>ile</div>
+      <div class="menu-item"><u>D</u>isk</div>
+      <div class="menu-item"><u>V</u>iew</div>
+      <div class="menu-item"><u>O</u>ptions</div>
+      <div class="menu-item"><u>W</u>indow</div>
+      <div class="menu-item"><u>H</u>elp</div>
+    </div>
+    <div style="padding: 4px 8px; background: #c0c0c0; border-bottom: 1px solid #808080; display:flex; gap: 8px; align-items:center;">
+      <span><strong>Drive:</strong> [C: RETRO]</span>
+      <span style="color:#555;">Path:</span>
+      <span id="fm-current-path" style="font-family: monospace; font-weight:bold;">games</span>
+      <button class="dialog-btn" id="fm-up-btn" style="padding: 2px 6px;">▲ Up</button>
+    </div>
+    <div style="flex-grow: 1; display: flex; background: #fff; border: 1px solid #808080; overflow: hidden;">
+      <div style="width: 200px; border-right: 1px solid #c0c0c0; overflow-y: auto; padding: 4px;" id="fm-tree-pane">
+        <!-- Folders tree -->
+      </div>
+      <div style="flex-grow: 1; overflow-y: auto; padding: 4px;" id="fm-files-pane">
+        <!-- Files list -->
+      </div>
+    </div>
+    <div class="win31-statusbar" style="position:static;">
+      <div class="status-panel flex" id="fm-status">Ready</div>
+      <button class="dialog-btn" onclick="closeFileManager()" style="margin: 2px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sirius Booklet Viewer Dialog -->
+<div class="modal-overlay" id="booklet-modal" aria-labelledby="booklet-title">
+  <div class="win31-dialog booklet-dialog">
+    <div class="win31-titlebar">
+      <div class="win31-btn sys-btn" onclick="closeBooklet()"><span class="sys-hyphen"></span></div>
+      <div class="titlebar-center" id="booklet-title">Sirius 5-Foot 10-Pack Directory Booklet Viewer</div>
+      <button class="win31-btn close-btn" type="button" aria-label="Close booklet viewer" onclick="closeBooklet()"></button>
+    </div>
+    <div class="booklet-reader">
+      <div class="booklet-controls" role="group" aria-label="Booklet page controls">
+        <button class="dialog-btn" id="booklet-previous" type="button" aria-label="Previous page" disabled>◀</button>
+        <label class="booklet-page-label" for="booklet-page-number">Page</label>
+        <input id="booklet-page-number" type="number" min="1" value="1" aria-label="Page number" disabled>
+        <span id="booklet-page-count" aria-hidden="true">of —</span>
+        <button class="dialog-btn" id="booklet-next" type="button" aria-label="Next page" disabled>▶</button>
+        <button class="dialog-btn booklet-rotate" id="booklet-rotate" type="button" aria-label="Rotate page counterclockwise" title="Rotate 90° counterclockwise" disabled>Rotate 90°</button>
+        <span class="booklet-control-spacer"></span>
+        <button class="dialog-btn" id="booklet-zoom-out" type="button" aria-label="Zoom out" disabled>−</button>
+        <button class="dialog-btn" id="booklet-zoom-in" type="button" aria-label="Zoom in" disabled>+</button>
+        <button class="dialog-btn" id="booklet-fit" type="button" disabled>Fit page</button>
+      </div>
+      <div class="booklet-page-area" id="booklet-page-area" aria-busy="false">
+        <canvas id="booklet-page-canvas" role="img" aria-label="Booklet page"></canvas>
+      </div>
+      <div class="booklet-status" id="booklet-status" role="status" aria-live="polite">Open the booklet to load its pages.</div>
+    </div>
+    <div class="booklet-modal-footer">
+      <span>Sirius Publishing (1994) Original 10-Pack CD-ROM Booklet (18 MB PDF)</span>
+      <a class="dialog-btn booklet-open-link" id="booklet-open-pdf" href="roms/shareware_cds/Sirius_5_Foot_10_Pack_Booklet.pdf" target="_blank" rel="noopener noreferrer">Open PDF in New Tab</a>
+      <button class="dialog-btn default" onclick="closeBooklet()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Right-Click Context Menu -->
+<div id="context-menu">
+  <div class="dropdown-entry" id="ctx-play-native"><strong>Launch Game</strong></div>
+  <div class="dropdown-entry" id="ctx-setup">Run Sound Setup / Configuration</div>
+  <div class="dropdown-divider"></div>
+  <div class="dropdown-entry" id="ctx-fav">Toggle Favorite (★)</div>
+  <div class="dropdown-entry" id="ctx-props">Properties...</div>
+</div>
+
+<input id="browser-library-folder" type="file" webkitdirectory multiple hidden>
+<dialog id="browser-game-dialog" aria-labelledby="browser-game-title">
+  <form class="win31-dialog" id="browser-game-form">
+    <div class="win31-titlebar"><div class="titlebar-center" id="browser-game-title">Open Game File</div></div>
+    <div class="browser-file-body">
+      <label for="browser-game-file">Game file</label>
+      <input type="file" id="browser-game-file" accept=".gb,.gbc,.sfc,.smc,.md,.gen,.bin,.zip" required>
+      <label for="browser-game-system">System</label>
+      <select class="win31-select" id="browser-game-system">
+        <option value="">Detect from file</option>
+        <option value="gb">Game Boy</option>
+        <option value="gbc">Game Boy Color</option>
+        <option value="snes">Super Nintendo</option>
+        <option value="segaMD">Sega Genesis / Mega Drive</option>
+      </select>
+      <p>For a ZIP or BIN file, select its system.</p>
+      <p id="browser-game-error" role="alert"></p>
+      <div class="browser-file-buttons">
+        <button type="submit" class="win31-btn">Open</button>
+        <button type="button" class="win31-btn" id="browser-cancel-game">Cancel</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+<script type="module" src="/src/desktop-entry.js"></script>
+</body>
+</html>

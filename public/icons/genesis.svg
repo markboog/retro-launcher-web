@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- Sega Genesis Cartridge -->
+  <rect x="3" y="4" width="26" height="24" rx="3" fill="#202020" stroke="#000" stroke-width="1"/>
+  <!-- Top notch -->
+  <rect x="5" y="4" width="22" height="2" fill="#404040"/>
+  <!-- Red banner label area -->
+  <rect x="6" y="8" width="20" height="15" fill="#ffffff" stroke="#000" stroke-width="1"/>
+  <rect x="6" y="8" width="20" height="4" fill="#c00000"/>
+  <!-- Sega grid pattern -->
+  <line x1="6" y1="15" x2="26" y2="15" stroke="#e0e0e0"/>
+  <line x1="6" y1="18" x2="26" y2="18" stroke="#e0e0e0"/>
+  <line x1="12" y1="12" x2="12" y2="23" stroke="#e0e0e0"/>
+  <line x1="18" y1="12" x2="18" y2="23" stroke="#e0e0e0"/>
+  <!-- Sega text vibe -->
+  <rect x="8" y="9" width="10" height="2" fill="#ffffff"/>
+  <!-- Grip tabs -->
+  <line x1="4" y1="10" x2="4" y2="22" stroke="#505050"/>
+  <line x1="27" y1="10" x2="27" y2="22" stroke="#505050"/>
+</svg>

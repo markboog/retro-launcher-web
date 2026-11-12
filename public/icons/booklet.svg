@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- Spiral Booklet / Directory -->
+  <rect x="7" y="3" width="22" height="26" fill="#fdfbf0" stroke="#000" stroke-width="1"/>
+  <!-- Front cover color block -->
+  <rect x="9" y="5" width="18" height="10" fill="#000080"/>
+  <rect x="11" y="7" width="14" height="2" fill="#ffd700"/>
+  <text x="12" y="13" font-size="3" font-family="monospace" fill="#ffffff" font-weight="bold">SIRIUS</text>
+  <!-- Text lines in booklet -->
+  <line x1="10" y1="18" x2="25" y2="18" stroke="#808080" stroke-width="1"/>
+  <line x1="10" y1="21" x2="23" y2="21" stroke="#808080" stroke-width="1"/>
+  <line x1="10" y1="24" x2="25" y2="24" stroke="#808080" stroke-width="1"/>
+  <!-- Spiral binding on left -->
+  <rect x="4" y="3" width="4" height="26" fill="#808080"/>
+  <line x1="3" y1="6" x2="7" y2="6" stroke="#ffffff" stroke-width="1"/>
+  <line x1="3" y1="10" x2="7" y2="10" stroke="#ffffff" stroke-width="1"/>
+  <line x1="3" y1="14" x2="7" y2="14" stroke="#ffffff" stroke-width="1"/>
+  <line x1="3" y1="18" x2="7" y2="18" stroke="#ffffff" stroke-width="1"/>
+  <line x1="3" y1="22" x2="7" y2="22" stroke="#ffffff" stroke-width="1"/>
+  <line x1="3" y1="26" x2="7" y2="26" stroke="#ffffff" stroke-width="1"/>
+</svg>

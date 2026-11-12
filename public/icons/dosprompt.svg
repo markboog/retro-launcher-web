@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- MS-DOS Prompt Icon -->
+  <rect x="3" y="4" width="26" height="24" rx="2" fill="#000000" stroke="#808080" stroke-width="1"/>
+  <rect x="5" y="6" width="22" height="20" fill="#000000"/>
+  <!-- DOS prompt text -->
+  <text x="6" y="14" font-size="7" font-family="'Courier New', monospace" font-weight="bold" fill="#ffffff">C:\&gt;</text>
+  <!-- Blinking cursor box -->
+  <rect x="18" y="14" width="4" height="1.5" fill="#ffffff"/>
+  <text x="6" y="22" font-size="5" font-family="'Courier New', monospace" fill="#ffff00">MS-DOS</text>
+</svg>

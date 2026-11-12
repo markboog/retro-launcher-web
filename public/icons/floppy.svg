@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- 3.5" DOS Floppy Disk -->
+  <rect x="3" y="3" width="26" height="26" fill="#1b4d89" stroke="#000" stroke-width="1"/>
+  <!-- Top right beveled corner -->
+  <polygon points="25,3 29,7 29,3" fill="#008080"/>
+  <!-- Metal Shutter -->
+  <rect x="8" y="3" width="14" height="11" fill="#c0c0c0" stroke="#000" stroke-width="1"/>
+  <rect x="12" y="5" width="4" height="6" fill="#1b4d89"/>
+  <!-- Paper Label -->
+  <rect x="6" y="16" width="20" height="12" fill="#ffffff" stroke="#000" stroke-width="1"/>
+  <rect x="8" y="17" width="16" height="3" fill="#ff4444"/>
+  <line x1="8" y1="22" x2="22" y2="22" stroke="#808080"/>
+  <line x1="8" y1="24" x2="20" y2="24" stroke="#808080"/>
+  <!-- Drive write-protect notch -->
+  <rect x="25" y="25" width="2" height="3" fill="#000"/>
+</svg>

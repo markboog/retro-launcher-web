@@ -1,0 +1,1160 @@
+/* ==========================================================================
+   AUTHENTIC WINDOWS 3.1 PROGRAM MANAGER STYLESHEET
+   1992 Micro-Soft Retro Windows Experience
+   ========================================================================== */
+
+@charset "UTF-8";
+
+:root {
+  --desktop-color: #008080;
+  --win-bg: #c0c0c0;
+  --win-white: #ffffff;
+  --win-black: #000000;
+  --win-gray-dark: #808080;
+  --win-gray-light: #dfdfdf;
+  --titlebar-active: #000080;
+  --titlebar-inactive: #808080;
+  --selection-blue: #000080;
+  --game-artwork-size: 60px;
+  --system-font: "Segoe UI", "MS Sans Serif", Tahoma, Geneva, sans-serif;
+  --fixed-font: "Lucida Console", "Courier New", Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--desktop-color);
+  font-family: var(--system-font);
+  font-size: 12px;
+  color: var(--win-black);
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   Desktop & Wallpaper
+-------------------------------------------------------------------------- */
+#desktop {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--desktop-color);
+}
+
+/* --------------------------------------------------------------------------
+   Main Window (Program Manager Shell)
+-------------------------------------------------------------------------- */
+#program-manager {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--win-bg);
+  border: 4px solid var(--win-bg);
+  outline: 1px solid var(--win-black);
+  box-shadow: 2px 2px 0 var(--win-black);
+}
+
+/* Outer 3D Bevel around the frame */
+.win31-frame {
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark),
+              inset 2px 2px 0 var(--win-gray-light),
+              inset -2px -2px 0 var(--win-black);
+}
+
+/* --------------------------------------------------------------------------
+   Titlebar
+-------------------------------------------------------------------------- */
+.win31-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 22px;
+  background-color: var(--titlebar-active);
+  color: var(--win-white);
+  padding: 1px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  cursor: move;
+}
+
+.win31-titlebar.inactive {
+  background-color: var(--titlebar-inactive);
+  color: var(--win-bg);
+}
+
+.titlebar-center {
+  flex-grow: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+/* Window Control Buttons */
+.win31-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 18px;
+  background-color: var(--win-bg);
+  color: var(--win-black);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.win31-btn:active {
+  box-shadow: inset 1px 1px 0 var(--win-black),
+              inset -1px -1px 0 var(--win-white);
+  padding-top: 1px;
+  padding-left: 1px;
+}
+
+/* Control Menu Box (System Box) with horizontal hyphen */
+.sys-btn {
+  position: relative;
+  margin-right: 2px;
+}
+
+.sys-hyphen {
+  display: block;
+  width: 11px;
+  height: 3px;
+  background-color: var(--win-black);
+  border-bottom: 1px solid var(--win-white);
+}
+
+.sys-hyphen-sub {
+  width: 7px;
+  height: 2px;
+  background-color: var(--win-black);
+  border-bottom: 1px solid var(--win-white);
+}
+
+/* Minimize & Maximize Buttons */
+.titlebar-controls {
+  display: flex;
+  gap: 1px;
+}
+
+.min-btn::after {
+  content: "▼";
+  font-size: 9px;
+  transform: scaleY(0.7);
+}
+
+.max-btn::after {
+  content: "▲";
+  font-size: 9px;
+  transform: scaleY(0.7);
+}
+
+.restore-btn::after {
+  content: "▲▼";
+  font-size: 7px;
+  letter-spacing: -2px;
+}
+
+.close-btn::after {
+  content: "×";
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Menu Bar
+-------------------------------------------------------------------------- */
+.win31-menubar {
+  display: flex;
+  align-items: center;
+  background-color: var(--win-bg);
+  border-bottom: 1px solid var(--win-black);
+  padding: 1px 4px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.menu-item {
+  position: relative;
+  padding: 2px 7px;
+  cursor: pointer;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+}
+
+.menu-item.active, .menu-item:hover {
+  background-color: var(--selection-blue);
+  color: var(--win-white);
+}
+
+.menu-item u {
+  text-decoration: underline;
+}
+
+/* Dropdown Menu Popup */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: 2px 2px 0 var(--win-black);
+  min-width: 170px;
+  z-index: 10000;
+  padding: 2px;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-menu.open {
+  display: block;
+}
+
+.dropdown-entry {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 3px 12px;
+  color: var(--win-black);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdown-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dropdown-shortcut {
+  flex: 0 0 auto;
+  margin-left: 20px;
+  color: #555;
+  font-size: 10px;
+}
+
+.dropdown-entry:hover {
+  background-color: var(--selection-blue);
+  color: var(--win-white);
+}
+
+.dropdown-entry.disabled {
+  color: var(--win-gray-dark);
+  pointer-events: none;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--win-gray-dark);
+  border-bottom: 1px solid var(--win-white);
+  margin: 3px 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Quick Toolbar
+-------------------------------------------------------------------------- */
+.win31-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--win-bg);
+  border-bottom: 1px solid var(--win-gray-dark);
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tool-btn:active {
+  box-shadow: inset 1px 1px 0 var(--win-black),
+              inset -1px -1px 0 var(--win-white);
+  padding: 4px 7px 2px 9px;
+}
+
+.tool-btn.active {
+  background-color: #dfdfdf;
+  box-shadow: inset 1px 1px 0 var(--win-gray-dark);
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 4px;
+}
+
+.win31-input {
+  background-color: var(--win-white);
+  color: var(--win-black);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-gray-dark);
+  padding: 2px 6px;
+  font-family: var(--system-font);
+  font-size: 12px;
+}
+
+.win31-select {
+  background-color: var(--win-white);
+  color: var(--win-black);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-gray-dark);
+  padding: 2px 4px;
+  font-family: var(--system-font);
+  font-size: 12px;
+}
+
+.win31-input:focus-visible,
+.win31-select:focus-visible,
+.tool-btn:focus-visible,
+.dialog-btn:focus-visible,
+.page-btn:focus-visible,
+.menu-item:focus-visible,
+.dropdown-entry:focus-visible,
+.program-item:focus-visible,
+.minimized-group:focus-visible,
+.win31-btn:focus-visible {
+  outline: 1px dotted var(--win-black);
+  outline-offset: -3px;
+}
+
+/* --------------------------------------------------------------------------
+   MDI Workspace (Inside Program Manager)
+-------------------------------------------------------------------------- */
+#mdi-workspace {
+  position: relative;
+  flex-grow: 1;
+  background-color: var(--win-bg);
+  overflow: hidden;
+  box-shadow: inset 1px 1px 0 var(--win-gray-dark),
+              inset -1px -1px 0 var(--win-white);
+}
+
+/* --------------------------------------------------------------------------
+   MDI Child Window (Program Groups)
+-------------------------------------------------------------------------- */
+.mdi-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--win-bg);
+  border: 3px solid var(--win-bg);
+  outline: 1px solid var(--win-black);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  min-width: 200px;
+  min-height: 150px;
+  z-index: 10;
+}
+
+.mdi-window.active {
+  z-index: 50;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+.mdi-window.maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mdi-titlebar {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  background-color: var(--titlebar-active);
+  color: var(--win-white);
+  padding: 1px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: move;
+}
+
+.mdi-window:not(.active) .mdi-titlebar {
+  background-color: var(--titlebar-inactive);
+  color: var(--win-bg);
+}
+
+.mdi-title {
+  flex-grow: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+/* MDI Client Area (White scrollable canvas for icons) */
+.mdi-client {
+  flex-grow: 1;
+  background-color: var(--win-white);
+  border: 2px solid;
+  border-color: var(--win-gray-dark) var(--win-white) var(--win-white) var(--win-gray-dark);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  grid-gap: 12px;
+  align-content: start;
+}
+
+/* Scrollbars Windows 3.1 Style */
+.mdi-client::-webkit-scrollbar {
+  width: 16px;
+  background-color: var(--win-gray-light);
+}
+
+.mdi-client::-webkit-scrollbar-thumb {
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark);
+}
+
+.mdi-client::-webkit-scrollbar-button {
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark);
+  height: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Program Items (Icons inside Groups)
+-------------------------------------------------------------------------- */
+.program-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 84px;
+  padding: 4px 2px;
+  cursor: pointer;
+  border-radius: 0;
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--win-black);
+  font: inherit;
+}
+
+.program-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  image-rendering: pixelated;
+}
+
+.program-artwork-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--game-artwork-size);
+  width: var(--game-artwork-size);
+  height: var(--game-artwork-size);
+  margin-bottom: 4px;
+}
+
+.program-icon.program-artwork {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.program-icon.program-artwork-fallback {
+  width: 32px;
+  height: 32px;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.program-label {
+  font-size: 11px;
+  line-height: 1.2;
+  word-break: break-word;
+  max-width: 80px;
+  padding: 1px 3px;
+  color: var(--win-black);
+}
+
+.family-empty-state {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: center;
+  max-width: 360px;
+  padding: 20px;
+  color: var(--win-black);
+  text-align: center;
+}
+
+.family-empty-state p {
+  margin: 8px 0 12px;
+  color: #444;
+  line-height: 1.35;
+}
+
+.program-item:hover .program-label {
+  text-decoration: underline;
+}
+
+.program-item.selected .program-label {
+  background-color: var(--selection-blue);
+  color: var(--win-white);
+  outline: 1px dotted var(--win-gray-dark);
+}
+
+/* Star badge for favorites */
+.fav-star {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  color: #ffcc00;
+  font-size: 12px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* --------------------------------------------------------------------------
+   Minimized Group Icons (Parked at bottom)
+-------------------------------------------------------------------------- */
+.minimized-icons-shelf {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.minimized-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 76px;
+  cursor: pointer;
+  pointer-events: auto;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.minimized-group:hover .minimized-label {
+  text-decoration: underline;
+}
+
+.minimized-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  margin-bottom: 2px;
+}
+
+.minimized-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--win-black);
+  background-color: var(--win-bg);
+  padding: 0 4px;
+  border: 1px dotted transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 76px;
+}
+
+.minimized-group.selected .minimized-label {
+  background-color: var(--selection-blue);
+  color: var(--win-white);
+  border-color: var(--win-white);
+}
+
+/* --------------------------------------------------------------------------
+   Resize Handles
+-------------------------------------------------------------------------- */
+.resize-handle {
+  position: absolute;
+}
+.resize-n { top: -3px; left: 0; right: 0; height: 5px; cursor: n-resize; }
+.resize-s { bottom: -3px; left: 0; right: 0; height: 5px; cursor: s-resize; }
+.resize-w { left: -3px; top: 0; bottom: 0; width: 5px; cursor: w-resize; }
+.resize-e { right: -3px; top: 0; bottom: 0; width: 5px; cursor: e-resize; }
+.resize-nw { top: -3px; left: -3px; width: 8px; height: 8px; cursor: nw-resize; }
+.resize-ne { top: -3px; right: -3px; width: 8px; height: 8px; cursor: ne-resize; }
+.resize-sw { bottom: -3px; left: -3px; width: 8px; height: 8px; cursor: sw-resize; }
+.resize-se { bottom: -3px; right: -3px; width: 8px; height: 8px; cursor: se-resize; }
+
+/* --------------------------------------------------------------------------
+   Status Bar (Bottom of Program Manager)
+-------------------------------------------------------------------------- */
+.win31-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  height: 22px;
+  background-color: var(--win-bg);
+  border-top: 1px solid var(--win-white);
+  padding: 2px 6px;
+  font-size: 11px;
+  gap: 8px;
+}
+
+#filemanager-modal .win31-statusbar {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  height: auto;
+  min-height: 28px;
+}
+
+#filemanager-modal .win31-statusbar .status-panel {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-panel {
+  padding: 1px 6px;
+  border: 1px solid;
+  border-color: var(--win-gray-dark) var(--win-white) var(--win-white) var(--win-gray-dark);
+  white-space: nowrap;
+}
+
+.status-panel.flex {
+  flex-grow: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Modals & Dialogs (Windows 3.1 Style)
+-------------------------------------------------------------------------- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 99999;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.win31-dialog {
+  background-color: var(--win-bg);
+  border: 3px solid var(--win-bg);
+  outline: 1px solid var(--win-black);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  min-width: 320px;
+  max-width: 700px;
+  max-width: min(700px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+.booklet-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--win-bg);
+  border-top: 1px solid var(--win-white);
+}
+
+.booklet-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 24px));
+  height: min(680px, calc(100dvh - 24px));
+  min-width: min(320px, calc(100vw - 24px));
+  min-height: 0;
+  overflow: hidden;
+}
+
+.booklet-reader {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--win-gray-dark);
+}
+
+.booklet-controls {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border-bottom: 1px solid var(--win-gray-dark);
+  background: var(--win-bg);
+}
+
+.booklet-controls button {
+  min-height: 28px;
+  min-width: 30px;
+}
+
+.booklet-page-label,
+#booklet-page-count {
+  font-size: 11px;
+}
+
+#booklet-page-number {
+  box-sizing: border-box;
+  width: 52px;
+  min-height: 26px;
+  padding: 2px 4px;
+}
+
+.booklet-control-spacer {
+  flex: 1 1 8px;
+}
+
+.booklet-page-area {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+  background: var(--win-gray-dark);
+}
+
+#booklet-page-canvas {
+  display: block;
+  flex: 0 0 auto;
+  margin-inline: auto;
+  height: auto;
+  border: 1px solid var(--win-black);
+  background: var(--win-white);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.booklet-status {
+  flex: 0 0 auto;
+  min-height: 18px;
+  padding: 3px 7px;
+  border-top: 1px solid var(--win-white);
+  background: var(--win-bg);
+  font-size: 11px;
+}
+
+.booklet-open-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--win-black);
+  text-decoration: none;
+}
+
+.booklet-open-link:focus-visible {
+  outline: 1px dotted var(--win-black);
+  outline-offset: -3px;
+}
+
+.dialog-content {
+  padding: 16px;
+  font-size: 12px;
+}
+
+.dialog-fieldset {
+  border: 1px solid;
+  border-color: var(--win-gray-dark) var(--win-white) var(--win-white) var(--win-gray-dark);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.dialog-fieldset legend {
+  padding: 0 4px;
+  font-weight: 500;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dialog-btn {
+  min-width: 80px;
+  padding: 4px 14px;
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white),
+              inset -1px -1px 0 var(--win-gray-dark);
+  font-family: var(--system-font);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dialog-btn:active {
+  box-shadow: inset 1px 1px 0 var(--win-black),
+              inset -1px -1px 0 var(--win-white);
+  padding: 5px 13px 3px 15px;
+}
+
+.dialog-btn.default {
+  outline: 2px solid var(--win-black);
+  outline-offset: -3px;
+  font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Retro CRT Window (In-App Player)
+-------------------------------------------------------------------------- */
+.crt-screen-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.crt-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: #000000;
+}
+
+/* Optional Scanline Effect */
+.crt-scanlines {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+  z-index: 10;
+}
+
+/* --------------------------------------------------------------------------
+   Context Menu
+-------------------------------------------------------------------------- */
+#context-menu {
+  display: none;
+  position: fixed;
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: 3px 3px 0 var(--win-black);
+  min-width: 180px;
+  z-index: 999999;
+  padding: 2px;
+}
+
+
+/* --------------------------------------------------------------------------
+   Virtual Pagination for Large Groups
+-------------------------------------------------------------------------- */
+.win31-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background-color: var(--win-bg);
+  border-top: 1px solid var(--win-gray-dark);
+  font-size: 11px;
+}
+
+.page-btn {
+  padding: 2px 8px;
+  background-color: var(--win-bg);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-white), inset -1px -1px 0 var(--win-gray-dark);
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  color: var(--win-gray-dark);
+  cursor: default;
+}
+
+.page-info {
+  font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Bar
+-------------------------------------------------------------------------- */
+.win31-progress-bar {
+  width: 100%;
+  height: 18px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-black);
+  box-shadow: inset 1px 1px 0 var(--win-gray-dark);
+  overflow: hidden;
+}
+
+.win31-progress-fill {
+  height: 100%;
+  background-color: var(--titlebar-active);
+  transition: width 0.3s;
+}
+
+.win31-progress-fill.indeterminate {
+  width: 100%;
+  background-color: var(--win-bg);
+  background-image: repeating-linear-gradient(90deg, var(--titlebar-active) 0 10px, transparent 10px 14px);
+  background-size: 100% 100%;
+  animation: win31-progress-march 0.5s steps(4, end) infinite;
+}
+
+@keyframes win31-progress-march {
+  from { background-position: 0 0; }
+  to { background-position: -56px 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Archive Table & FM List
+-------------------------------------------------------------------------- */
+.archive-table th, .archive-table td {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.archive-table tr:hover {
+  background-color: #f0f0f0;
+}
+
+.fm-item {
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.fm-item:hover {
+  background-color: #e8e8e8;
+}
+
+.fm-item.selected {
+  background-color: var(--selection-blue);
+  color: var(--win-white);
+}
+
+.fm-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+
+
+/* --------------------------------------------------------------------------
+   Double Click Target Fix & Immediate Feedback
+-------------------------------------------------------------------------- */
+.program-item * {
+  pointer-events: none;
+}
+
+body.cursor-wait, body.cursor-wait * {
+  cursor: wait !important;
+}
+
+#launch-indicator-box {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  background-color: var(--win-bg);
+  border: 2px solid var(--win-black);
+  box-shadow: 4px 4px 0 var(--win-black);
+  z-index: 9999999;
+  font-family: var(--system-font);
+}
+
+#launch-indicator-box.show {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  #program-manager {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .win31-toolbar {
+    align-content: start;
+    gap: 4px;
+  }
+
+  .search-container {
+    margin-left: 0;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  #game-search {
+    width: auto !important;
+    min-width: 8rem;
+    flex: 1 1 8rem;
+  }
+
+  .win31-statusbar {
+    height: auto;
+    min-height: 22px;
+    gap: 4px;
+  }
+
+  .status-panel {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-panel.flex {
+    flex: 1 1 12rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .win31-statusbar .status-panel:nth-last-child(-n + 2) {
+    display: none;
+  }
+
+  .mdi-window {
+    max-width: calc(100% - 8px);
+    max-height: calc(100% - 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-spinner,
+  .win31-progress-fill.indeterminate {
+    animation: none;
+  }
+}
+
+.launch-indicator-title {
+  background-color: var(--titlebar-active);
+  color: var(--win-white);
+  padding: 3px 6px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.launch-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+.launch-spinner {
+  font-size: 26px;
+  animation: win31-spin 1s steps(8) infinite;
+}
+
+@keyframes win31-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@media (max-width: 520px) {
+  .win31-statusbar .status-panel:nth-last-child(-n + 2) {
+    display: none;
+  }
+
+  .mdi-window {
+    max-width: calc(100% - 8px);
+    max-height: calc(100% - 8px);
+  }
+
+  .booklet-dialog {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+  }
+
+  .booklet-controls {
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .booklet-controls button {
+    min-width: 28px;
+    min-height: 28px;
+  }
+}

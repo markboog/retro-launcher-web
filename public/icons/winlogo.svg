@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Windows 3.1 4-Color Flag Logo -->
+  <path d="M 6,5 Q 11,3 15,6 Q 14,13 14,15 Q 9,13 6,15 Z" fill="#ff0000"/>
+  <path d="M 16,6 Q 21,9 26,7 Q 26,14 24,16 Q 19,14 15,16 Z" fill="#00bb00"/>
+  <path d="M 6,17 Q 10,15 14,17 Q 14,24 13,26 Q 9,24 6,26 Z" fill="#0066cc"/>
+  <path d="M 15,18 Q 19,20 24,18 Q 23,25 21,27 Q 17,25 14,27 Z" fill="#ffcc00"/>
+  <!-- Black motion streaks -->
+  <line x1="2" y1="9" x2="5" y2="9" stroke="#000" stroke-width="1.5"/>
+  <line x1="1" y1="13" x2="4" y2="13" stroke="#000" stroke-width="1.5"/>
+  <line x1="3" y1="21" x2="5" y2="21" stroke="#000" stroke-width="1.5"/>
+  <line x1="27" y1="10" x2="30" y2="10" stroke="#000" stroke-width="1.5"/>
+  <line x1="26" y1="20" x2="29" y2="20" stroke="#000" stroke-width="1.5"/>
+</svg>

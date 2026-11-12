@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- SNES Cartridge Icon -->
+  <rect x="2" y="4" width="28" height="24" rx="2" fill="#bcbcbc" stroke="#000" stroke-width="1"/>
+  <!-- Top notch / curve -->
+  <rect x="4" y="2" width="24" height="4" fill="#a4a4a4"/>
+  <rect x="4" y="2" width="24" height="1" fill="#dfdfdf"/>
+  <!-- Cartridge label area -->
+  <rect x="5" y="8" width="22" height="15" fill="#303030" stroke="#000" stroke-width="1"/>
+  <rect x="6" y="9" width="20" height="9" fill="#181828"/>
+  <!-- Super Nintendo stripe -->
+  <rect x="6" y="18" width="20" height="4" fill="#7b52ab"/>
+  <!-- Mini Nintendo logo / text -->
+  <rect x="8" y="11" width="5" height="4" fill="#ff4444"/>
+  <rect x="14" y="11" width="10" height="2" fill="#ffffff"/>
+  <rect x="14" y="14" width="7" height="1" fill="#ffff00"/>
+  <!-- Grip grooves -->
+  <line x1="3" y1="9" x2="3" y2="23" stroke="#808080"/>
+  <line x1="28" y1="9" x2="28" y2="23" stroke="#808080"/>
+  <line x1="8" y1="25" x2="24" y2="25" stroke="#707070"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- Minesweeper Bomb Icon -->
+  <!-- Fuse -->
+  <line x1="22" y1="5" x2="25" y2="2" stroke="#ff8800" stroke-width="2"/>
+  <circle cx="26" cy="2" r="1.5" fill="#ffff00"/>
+  <rect x="18" y="7" width="5" height="4" fill="#808080" stroke="#000"/>
+  <!-- Bomb body -->
+  <circle cx="15" cy="18" r="10" fill="#000000"/>
+  <!-- Spikes -->
+  <line x1="15" y1="5" x2="15" y2="8" stroke="#000" stroke-width="2"/>
+  <line x1="15" y1="28" x2="15" y2="31" stroke="#000" stroke-width="2"/>
+  <line x1="2" y1="18" x2="5" y2="18" stroke="#000" stroke-width="2"/>
+  <line x1="25" y1="18" x2="28" y2="18" stroke="#000" stroke-width="2"/>
+  <line x1="6" y1="9" x2="8" y2="11" stroke="#000" stroke-width="2"/>
+  <line x1="22" y1="25" x2="24" y2="27" stroke="#000" stroke-width="2"/>
+  <line x1="6" y1="27" x2="8" y2="25" stroke="#000" stroke-width="2"/>
+  <!-- Shine highlight -->
+  <circle cx="12" cy="15" r="2.5" fill="#ffffff"/>
+  <circle cx="10" cy="13" r="1" fill="#ffffff"/>
+</svg>
