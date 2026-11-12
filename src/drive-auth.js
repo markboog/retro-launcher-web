@@ -125,6 +125,8 @@ export function readRememberedSelection() {
   return null;
 }
 
+export const DEFAULT_FILE_ID = "1nU_bzNmkActvyGo_rF5GvPmv8OcF--bp";
+
 export async function connectDrive({ selectFile = false } = {}) {
   if (!pickerLoaded) throw new Error("Prepare the Google Drive connection before connecting.");
   const token = await requestAccessToken({ prompt: selectFile ? "select_account" : "" });
@@ -140,7 +142,7 @@ export async function connectDrive({ selectFile = false } = {}) {
 
   if (!selectFile) {
     const urlParams = new URLSearchParams(window.location.hash.slice(1));
-    const urlFileId = urlParams.get("library");
+    const urlFileId = urlParams.get("library") || DEFAULT_FILE_ID;
     if (urlFileId && /^[A-Za-z0-9_-]{15,150}$/.test(urlFileId)) {
       return { fileId: urlFileId, resourceKey: null, getToken };
     }
@@ -152,12 +154,14 @@ export async function connectDrive({ selectFile = false } = {}) {
     const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS);
     view.setMimeTypes("application/zip,application/x-zip-compressed");
     view.setIncludeFolders(false);
+    view.setQuery("RetroLauncher");
     // Leaving ownership unset shows owned files and files shared with the user.
     const picker = new window.google.picker.PickerBuilder()
       .addView(view)
       .setOAuthToken(token.value)
       .setDeveloperKey(pickerKey)
       .setAppId(projectNumber)
+      .setTitle("Select your RetroLauncher game library ZIP")
       .setCallback((data) => {
         if (data.action === window.google.picker.Action.CANCEL) resolve(null);
         if (data.action !== window.google.picker.Action.PICKED) return;

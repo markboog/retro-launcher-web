@@ -1,4 +1,4 @@
-import { connectDrive, hasDriveConfiguration, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
+import { DEFAULT_FILE_ID, connectDrive, hasDriveConfiguration, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
 
 export function driveErrorMessage(error) {
   if (error?.status === 401) return "Google Drive access expired. Reconnect to continue.";
@@ -26,7 +26,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   let libraryLoaded = false;
 
   function updateDownloadLink() {
-    const fileId = new URLSearchParams(window.location.hash.slice(1)).get("library");
+    const fileId = new URLSearchParams(window.location.hash.slice(1)).get("library") || DEFAULT_FILE_ID;
     const valid = fileId && /^[A-Za-z0-9_-]{15,150}$/.test(fileId);
     downloadLink.hidden = !valid;
     if (!valid) {
