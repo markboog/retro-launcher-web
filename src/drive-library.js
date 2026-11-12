@@ -76,7 +76,7 @@ function directoryEntries(bytes, totalSize) {
       }
     }
   }
-  if (endOffset < 0) throw new DriveLibraryError("This Google Drive file is not a supported ZIP archive.");
+  if (endOffset < 0) throw new DriveLibraryError("This file is not a supported ZIP archive.");
 
   const disk = view.getUint16(endOffset + 4, true);
   const directoryDisk = view.getUint16(endOffset + 6, true);
@@ -209,6 +209,40 @@ export async function openDriveLibrary({ fileId, resourceKey, getToken, signal }
     return new Uint8Array(await new Blob(chunks).arrayBuffer());
   }
 
+  return openArchive(totalSize, readRange, signal);
+}
+
+export async function openLocalLibrary(file, signal) {
+  if (!(file instanceof Blob) || !Number.isSafeInteger(file.size) || file.size <= 0) {
+    throw new DriveLibraryError("Choose a non-empty local ZIP archive.");
+  }
+  if (signal?.aborted) propagateSignalError(undefined, signal);
+  const totalSize = file.size;
+  async function readRange(start, endExclusive, requestSignal) {
+    if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(endExclusive) || start < 0 || endExclusive <= start || endExclusive > totalSize) {
+      throw new DriveLibraryError("The ZIP requested an invalid byte range.");
+    }
+    const chunks = [];
+    for (let position = start; position < endExclusive;) {
+      if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+      const end = Math.min(position + RANGE_SIZE, endExclusive);
+      try {
+        chunks.push(new Uint8Array(await file.slice(position, end).arrayBuffer()));
+      } catch (error) {
+        propagateSignalError(error, requestSignal);
+        throw new DriveLibraryError("The ZIP could not be read. Make sure it’s available on this device, then try again.");
+      }
+      position = end;
+    }
+    if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+    if (chunks.length === 1) return chunks[0];
+    return new Uint8Array(await new Blob(chunks).arrayBuffer());
+  }
+  return openArchive(totalSize, readRange, signal);
+}
+
+async function openArchive(totalSize, readRange, signal) {
   const tailStart = Math.max(0, totalSize - 65_557);
   const tail = await readRange(tailStart, totalSize, signal);
   const directory = directoryEntries(tail, totalSize);
@@ -233,10 +267,13 @@ export async function openDriveLibrary({ fileId, resourceKey, getToken, signal }
       webkitRelativePath: entry.name,
       async load(loadSignal) {
         const requestSignal = loadSignal;
+        if (requestSignal?.aborted) propagateSignalError(undefined, requestSignal);
+        if (entry.localOffset + 30 > totalSize) throw new DriveLibraryError("The ZIP entry header is outside the archive.");
         const local = await readRange(entry.localOffset, entry.localOffset + 30, requestSignal);
         const localView = new DataView(local.buffer, local.byteOffset, local.byteLength);
         if (localView.getUint32(0, true) !== 0x04034b50) throw new DriveLibraryError("The ZIP entry header is malformed.");
         const dataStart = entry.localOffset + 30 + localView.getUint16(26, true) + localView.getUint16(28, true);
+        if (dataStart > totalSize || entry.compressedSize > totalSize - dataStart) throw new DriveLibraryError("The ZIP entry data is outside the archive.");
         const compressed = await readRange(dataStart, dataStart + entry.compressedSize, requestSignal);
         const source = new Blob([compressed]);
         const output = entry.method === 0 ? source.stream() : source.stream().pipeThrough(new DecompressionStream("deflate-raw"));

@@ -155,7 +155,7 @@
     <!-- Status Bar -->
     <div class="win31-statusbar">
       <div class="status-panel" id="status-text">Ready</div>
-      <div class="status-panel flex" id="status-selection">Open Game Boy for the demo, or choose File → Import Game Folder.</div>
+      <div class="status-panel flex" id="status-selection">Open Game Boy for the demo, or choose File → Load Game Library.</div>
       <div class="status-panel" id="status-total-games">1,044 Games</div>
       <div class="status-panel">Memory: 634,816 KB Free</div>
       <div class="status-panel">386 Enhanced Mode</div>
@@ -427,6 +427,7 @@
 </div>
 
 <input id="browser-library-folder" type="file" webkitdirectory multiple hidden>
+<input id="browser-library-zip" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 <dialog class="browser-dialog" id="browser-game-dialog" aria-labelledby="browser-game-title">
   <form class="win31-dialog" id="browser-game-form">
     <div class="win31-titlebar"><div class="titlebar-center" id="browser-game-title">Open Game File</div></div>
@@ -454,12 +455,13 @@
   <form method="dialog" class="win31-dialog browser-library-form">
     <div class="win31-titlebar"><div class="titlebar-center" id="browser-library-title">Load Game Library</div></div>
     <div class="browser-file-body">
-      <p id="browser-library-intro">Choose the games folder from your extracted family ZIP, or play the included demo.</p>
+      <p id="browser-library-intro">Open the family ZIP from Google Drive for desktop or Downloads. You can also choose an extracted game folder.</p>
       <p id="browser-library-error" role="alert"></p>
       <div class="browser-file-buttons">
         <button type="button" class="win31-btn" id="browser-connect-drive" hidden>Connect Google Drive</button>
-        <button type="button" class="win31-btn" id="browser-change-drive" hidden>Choose another ZIP</button>
-        <button type="button" class="win31-btn" id="browser-choose-folder" autofocus>Choose game folder</button>
+        <button type="button" class="win31-btn" id="browser-change-drive" hidden>Change Drive ZIP</button>
+        <button type="button" class="win31-btn" id="browser-choose-zip" autofocus>Open library ZIP</button>
+        <button type="button" class="win31-btn" id="browser-choose-folder">Choose game folder</button>
         <button type="submit" class="win31-btn" id="browser-library-later">Maybe later</button>
       </div>
     </div>

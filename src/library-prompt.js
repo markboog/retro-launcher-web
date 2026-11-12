@@ -11,11 +11,12 @@ export function driveErrorMessage(error) {
   return error instanceof Error ? error.message : "Could not open the game library.";
 }
 
-export function setupLibraryPrompt({ chooseFolder, loadDriveFiles, showStatus }) {
+export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus }) {
   const dialog = document.getElementById("browser-library-dialog");
   const errorText = document.getElementById("browser-library-error");
   const connectButton = document.getElementById("browser-connect-drive");
   const changeButton = document.getElementById("browser-change-drive");
+  const zipInput = document.getElementById("browser-library-zip");
   let dismissed = false;
   let ready = false;
   let busy = false;
@@ -30,7 +31,7 @@ export function setupLibraryPrompt({ chooseFolder, loadDriveFiles, showStatus })
       ready = true;
       connectButton.textContent = "Connect Google Drive";
     } catch {
-      errorText.textContent = "Google Drive could not load. Try again or choose a local game folder.";
+      errorText.textContent = "Google Drive could not connect. Try again or open the ZIP from this device.";
       connectButton.textContent = "Retry Google Drive";
     } finally {
       connectButton.disabled = false;
@@ -67,8 +68,7 @@ export function setupLibraryPrompt({ chooseFolder, loadDriveFiles, showStatus })
       showStatus("Reading the game library from Google Drive…");
       const { openDriveLibrary } = await import("./drive-library.js");
       const files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
-      if (!files.length) throw new Error("This ZIP contains no games the browser launcher can play.");
-      await loadDriveFiles(files);
+      await loadArchiveFiles(files, "drive");
       changeButton.hidden = false;
     } catch (error) {
       message = driveErrorMessage(error);
@@ -82,8 +82,6 @@ export function setupLibraryPrompt({ chooseFolder, loadDriveFiles, showStatus })
 
   if (hasDriveConfiguration) {
     connectButton.hidden = false;
-    document.getElementById("browser-library-intro").textContent =
-      "Connect Google Drive to load the shared family ZIP, or choose a game folder from this device.";
     connectButton.addEventListener("click", () => void connect(false));
     changeButton.addEventListener("click", () => void connect(true));
   }
@@ -91,6 +89,29 @@ export function setupLibraryPrompt({ chooseFolder, loadDriveFiles, showStatus })
     if (dialog.returnValue === "connect") return;
     dismissed = true;
     try { sessionStorage.setItem(DISMISS_KEY, "1"); } catch { /* Session storage can be blocked. */ }
+  });
+  document.getElementById("browser-choose-zip").addEventListener("click", () => zipInput.click());
+  zipInput.addEventListener("change", async () => {
+    const file = zipInput.files[0];
+    zipInput.value = "";
+    if (!file || busy) return;
+    busy = true;
+    dialog.close();
+    showStatus("Reading the game library ZIP…");
+    let message = "";
+    try {
+      const { openLocalLibrary } = await import("./drive-library.js");
+      const files = await openLocalLibrary(file, AbortSignal.timeout(45_000));
+      await loadArchiveFiles(files, "zip");
+    } catch (error) {
+      message = error?.name === "TimeoutError"
+        ? "Reading the ZIP took too long. Make sure it’s available on this device, then try again."
+        : error instanceof Error ? error.message : "Could not open the library ZIP.";
+      showStatus(message);
+    } finally {
+      busy = false;
+      if (message) show(message);
+    }
   });
   document.getElementById("browser-choose-folder").addEventListener("click", () => {
     dialog.close();

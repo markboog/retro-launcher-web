@@ -1,7 +1,7 @@
 import { deflateRawSync } from "node:zlib";
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { DriveLibraryError, openDriveLibrary } from "../src/drive-library.js";
+import { DriveLibraryError, openDriveLibrary, openLocalLibrary } from "../src/drive-library.js";
 
 function crc32(bytes) {
   let crc = 0xffffffff;
@@ -113,6 +113,36 @@ test("lists and loads stored and deflated games through bounded Drive byte range
     assert.ok(media.every(({ headers }) => headers.has("Range")));
   } finally {
     mock.restore();
+  }
+});
+
+test("opens and loads supported games from a local ZIP without network access", async () => {
+  const payload = Buffer.from([8, 6, 7, 5, 3, 0, 9]);
+  const archive = makeArchive([
+    { name: "RetroLauncher/games/gb/local.gb", data: payload, method: 0 },
+    { name: "RetroLauncher/games/snes/local.sfc", data: payload, method: 8 },
+  ]);
+  let fetched = false;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => { fetched = true; throw new Error("unexpected network request"); };
+  try {
+    const reads = [];
+    const file = new Blob([archive]);
+    const slice = file.slice.bind(file);
+    file.slice = (start, end, type) => {
+      reads.push([start, end]);
+      return slice(start, end, type);
+    };
+    const entries = await openLocalLibrary(file);
+    assert.deepEqual(entries.map(({ name, size, webkitRelativePath }) => ({ name, size, webkitRelativePath })), [
+      { name: "local.gb", size: payload.length, webkitRelativePath: "RetroLauncher/games/gb/local.gb" },
+      { name: "local.sfc", size: payload.length, webkitRelativePath: "RetroLauncher/games/snes/local.sfc" },
+    ]);
+    for (const entry of entries) assert.deepEqual(Buffer.from(await (await entry.load()).arrayBuffer()), payload);
+    assert.ok(reads.every(([start, end]) => end - start <= 2 * 1024 * 1024));
+    assert.equal(fetched, false);
+  } finally {
+    globalThis.fetch = originalFetch;
   }
 });
 

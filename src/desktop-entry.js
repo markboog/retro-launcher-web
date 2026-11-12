@@ -14,7 +14,7 @@ const demo = {
   url: new URL("./demo/snake.gb", document.baseURI).href,
 };
 const catalog = new Map([[demo.id, demo]]);
-const driveGameIds = new Set();
+const archiveGameIds = new Set();
 const folderInput = document.getElementById("browser-library-folder");
 const singleDialog = document.getElementById("browser-game-dialog");
 const fileForm = document.getElementById("browser-game-form");
@@ -29,20 +29,21 @@ window.retroBrowserArtwork = (id) => id === demo.id
   ? new URL("./demo/source/images/screenshot_bw.png", document.baseURI).href
   : null;
 
-async function browserGame(source, system) {
+const archiveLabels = { drive: "Google Drive", zip: "the library ZIP" };
+
+async function browserGame(source, system, archive) {
   const { file, ...info } = describeFile(source, system);
-  const fromDrive = typeof source.load === "function";
-  const input = new TextEncoder().encode(fromDrive ? "drive:" + info.id : info.id);
+  const input = new TextEncoder().encode(archive ? `${archive}:${info.id}` : info.id);
   const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
   const id = "browser_" + Array.from(bytes.slice(0, 12), (byte) => byte.toString(16).padStart(2, "0")).join("");
   return {
     ...info,
-    ...(fromDrive ? { loadFile: (signal) => source.load(signal) } : { file }),
+    ...(archive ? { archive, loadFile: (signal) => source.load(signal) } : { file }),
     id,
     platform: info.system === "segaMD" ? "md" : info.system,
     filename: file.name,
     genre: "Classic",
-    desc: SYSTEMS[info.system] + (fromDrive ? " game from Google Drive." : " game from this device."),
+    desc: `${SYSTEMS[info.system]} game from ${archiveLabels[archive] ?? "this device"}.`,
   };
 }
 
@@ -86,7 +87,7 @@ async function play(game, setupMode) {
   });
 
   try {
-    if (game.loadFile) progress.textContent = "Loading game from Google Drive…";
+    if (game.archive) progress.textContent = `Loading game from ${archiveLabels[game.archive]}…`;
     const fileRequest = game.loadFile
       ? game.loadFile(AbortSignal.any([controller.signal, AbortSignal.timeout(45_000)]))
       : game.file;
@@ -108,7 +109,7 @@ async function play(game, setupMode) {
     return { success: true, message: "Opened " + game.title + " in the browser player" };
   } catch (error) {
     if (activeSession !== session) return { success: false, message: "The player was closed." };
-    progress.textContent = game.loadFile ? driveErrorMessage(error)
+    progress.textContent = game.archive === "drive" ? driveErrorMessage(error)
       : error instanceof Error ? error.message : "The game player could not start.";
     return { success: false, message: progress.textContent };
   }
@@ -125,16 +126,17 @@ async function refreshLibrary() {
   await window.retroReloadCatalog();
 }
 
-async function loadDriveFiles(files) {
-  const games = await Promise.all(files.map((file) => browserGame(file)));
-  for (const id of driveGameIds) catalog.delete(id);
-  driveGameIds.clear();
+async function loadArchiveFiles(files, source) {
+  if (!files.length) throw new Error("This ZIP contains no games the browser launcher can play.");
+  const games = await Promise.all(files.map((file) => browserGame(file, "", source)));
+  for (const id of archiveGameIds) catalog.delete(id);
+  archiveGameIds.clear();
   for (const game of games) {
     catalog.set(game.id, game);
-    driveGameIds.add(game.id);
+    archiveGameIds.add(game.id);
   }
   await refreshLibrary();
-  showStatus(`Loaded ${games.length} ${games.length === 1 ? "game" : "games"} from Google Drive.`);
+  showStatus(`Loaded ${games.length} ${games.length === 1 ? "game" : "games"} from ${archiveLabels[source]}.`);
 }
 
 folderInput.addEventListener("change", async () => {
@@ -183,5 +185,5 @@ function loadClassicScript(filename) {
 
 loadClassicScript("win31_apps.js")
   .then(() => loadClassicScript("win31.js"))
-  .then(() => setupLibraryPrompt({ chooseFolder: () => folderInput.click(), loadDriveFiles, showStatus }))
+  .then(() => setupLibraryPrompt({ chooseFolder: () => folderInput.click(), loadArchiveFiles, showStatus }))
   .catch((error) => { browserStatus().textContent = error.message; });

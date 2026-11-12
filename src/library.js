@@ -24,7 +24,7 @@ const FOLDERS = new Map([
 export function describeFile(file, chosenSystem = "") {
   if (!file.size) throw new Error("The game file is empty.");
   if (file.size > 64 * 1024 * 1024) {
-    throw new Error("Choose a single game under 64 MB, or extract the library ZIP and import its games folder.");
+    throw new Error("Choose a single game under 64 MB, or open the library ZIP from File → Load Game Library.");
   }
   const extension = file.name.split(".").at(-1).toLowerCase();
   const direct = FORMATS.get(extension);
