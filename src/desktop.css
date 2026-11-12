@@ -46,12 +46,12 @@
   overscroll-behavior: contain;
 }
 .browser-dialog .win31-dialog {
-  width: min(390px, calc(100vw - 24px));
+  width: min(440px, calc(100vw - 24px));
   min-width: 0;
 }
 .browser-file-body {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   padding: 12px;
 }
 .browser-file-body input { max-width: 100%; }
@@ -65,9 +65,85 @@
 .browser-file-body p { margin: 0; }
 .browser-file-buttons { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
 .browser-file-buttons [hidden] { display: none; }
-.browser-library-form .browser-file-body { gap: 12px; }
+.browser-library-form .browser-file-body { gap: 10px; }
 #browser-download-library { text-decoration: none; }
 #browser-game-error,
 #browser-library-error { color: #780000; }
 #browser-game-error:empty,
 #browser-library-error:empty { display: none; }
+
+.library-option-card {
+  border: 1px solid #7f9db9;
+  background: #fdfdfd;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+.library-option-card .option-title {
+  font-weight: bold;
+  font-size: 12px;
+  color: #000080;
+}
+.library-option-card .option-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  margin: 0;
+  color: #333;
+}
+.library-option-card .option-button-row,
+.library-option-card .option-steps-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.win31-btn-primary {
+  font-weight: bold;
+  box-shadow: 0 0 0 1px #000 inset;
+}
+.library-divider {
+  text-align: center;
+  position: relative;
+  font-weight: bold;
+  font-size: 11px;
+  color: #555;
+  margin: 2px 0;
+}
+.library-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #808080;
+  z-index: 1;
+}
+.library-divider span {
+  position: relative;
+  z-index: 2;
+  background: #c0c0c0;
+  padding: 0 8px;
+}
+.library-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #808080;
+}
+.win31-link-btn {
+  background: none;
+  border: 0;
+  color: #000080;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  padding: 0;
+}
+.win31-link-btn:hover {
+  color: #0000ff;
+}

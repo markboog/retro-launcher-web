@@ -18,6 +18,8 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   const changeButton = document.getElementById("browser-change-drive");
   const zipInput = document.getElementById("browser-library-zip");
   const folderInput = document.getElementById("browser-library-folder");
+  const driveBox = document.getElementById("box-connect-drive");
+  const divider = document.getElementById("library-divider");
   const defaultIntro = intro.textContent;
   let ready = false;
   let busy = false;
@@ -29,17 +31,13 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
     downloadLink.hidden = !valid;
     if (!valid) {
       downloadLink.removeAttribute("href");
-      intro.textContent = defaultIntro;
+      intro.textContent = "Open a game library ZIP from your device:";
       return;
     }
     const url = new URL("https://drive.google.com/uc?export=download");
     url.searchParams.set("id", fileId);
     downloadLink.href = url.href;
-    if (hasDriveConfiguration) {
-      intro.textContent = "Connect Google Drive to load the family game library directly, or download the ZIP to open it from this device.";
-    } else {
-      intro.textContent = "Download the family ZIP from Google Drive. When it finishes, return here and open the ZIP from Downloads.";
-    }
+    intro.textContent = "Download the full ZIP from Google Drive to your computer, then open it here:";
   }
 
   async function prepare() {
@@ -122,9 +120,13 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   }
 
   if (hasDriveConfiguration) {
-    connectButton.hidden = false;
+    if (driveBox) driveBox.hidden = false;
+    if (divider) divider.hidden = false;
     connectButton.addEventListener("click", () => void connect(false));
     changeButton.addEventListener("click", () => void connect(true));
+  } else {
+    if (driveBox) driveBox.hidden = true;
+    if (divider) divider.hidden = true;
   }
   async function loadLocal(status, load) {
     if (busy) return;

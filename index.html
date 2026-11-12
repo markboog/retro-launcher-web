@@ -455,16 +455,33 @@
   <form method="dialog" class="win31-dialog browser-library-form">
     <div class="win31-titlebar"><div class="titlebar-center" id="browser-library-title">Load Game Library</div></div>
     <div class="browser-file-body">
-      <p id="browser-library-intro">Open the family ZIP from Google Drive for desktop or Downloads. You can also choose an extracted game folder.</p>
       <p id="browser-library-error" role="alert"></p>
-      <div class="browser-file-buttons">
-        <a class="win31-btn" id="browser-download-library" target="_blank" rel="noopener noreferrer" hidden>Download family ZIP</a>
-        <button type="button" class="win31-btn" id="browser-choose-zip" autofocus>Open library ZIP</button>
+
+      <!-- Option 1: Direct Google Drive Stream -->
+      <div class="library-option-card" id="box-connect-drive">
+        <div class="option-title">Option 1: Stream Directly from Google Drive (Fastest)</div>
+        <p class="option-desc">Sign in with your Google account to play games immediately without downloading the 1.09 GB archive.</p>
+        <div class="option-button-row">
+          <button type="button" class="win31-btn win31-btn-primary" id="browser-connect-drive" autofocus>Connect Google Drive</button>
+          <button type="button" class="win31-btn" id="browser-change-drive" hidden>Change Drive ZIP</button>
+        </div>
       </div>
-      <div class="browser-file-buttons">
-        <button type="button" class="win31-btn" id="browser-connect-drive" hidden>Connect Google Drive</button>
-        <button type="button" class="win31-btn" id="browser-change-drive" hidden>Change Drive ZIP</button>
-        <button type="button" class="win31-btn" id="browser-choose-folder">Choose game folder</button>
+
+      <div class="library-divider" id="library-divider"><span>OR</span></div>
+
+      <!-- Option 2: Manual Download & Load -->
+      <div class="library-option-card" id="box-manual-download">
+        <div class="option-title">Option 2: Download & Load Manually</div>
+        <p class="option-desc" id="browser-library-intro">Download the full ZIP from Google Drive to your computer, then open it here:</p>
+        <div class="option-steps-row">
+          <a class="win31-btn" id="browser-download-library" target="_blank" rel="noopener noreferrer" hidden>1. Download Family ZIP</a>
+          <button type="button" class="win31-btn" id="browser-choose-zip">2. Open Library ZIP</button>
+        </div>
+      </div>
+
+      <!-- Footer / Cancel -->
+      <div class="library-footer-row">
+        <button type="button" class="win31-link-btn" id="browser-choose-folder">Choose extracted game folder instead</button>
         <button type="submit" class="win31-btn" id="browser-library-later">Maybe later</button>
       </div>
     </div>
