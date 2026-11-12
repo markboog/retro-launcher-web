@@ -15,7 +15,6 @@ const demo = {
 };
 const catalog = new Map([[demo.id, demo]]);
 const archiveGameIds = new Set();
-const folderInput = document.getElementById("browser-library-folder");
 const singleDialog = document.getElementById("browser-game-dialog");
 const fileForm = document.getElementById("browser-game-form");
 const fileInput = document.getElementById("browser-game-file");
@@ -139,21 +138,15 @@ async function loadArchiveFiles(files, source) {
   showStatus(`Loaded ${games.length} ${games.length === 1 ? "game" : "games"} from ${archiveLabels[source]}.`);
 }
 
-folderInput.addEventListener("change", async () => {
-  const files = Array.from(folderInput.files);
-  folderInput.value = "";
-  if (!files.length) return;
-  browserStatus().textContent = "Reading game folder…";
+async function loadFolderFiles(files) {
   const games = await Promise.all(files.map((file) => browserGame(file).catch(() => null)));
   const imported = games.filter(Boolean);
+  if (!imported.length) throw new Error("No supported browser games found in that folder.");
   for (const game of imported) catalog.set(game.id, game);
   await refreshLibrary();
-  browserStatus().textContent = imported.length
-    ? "Imported " + imported.length + " games"
-    : "No supported browser games found in that folder.";
-});
+  showStatus(`Imported ${imported.length} ${imported.length === 1 ? "game" : "games"} from the folder.`);
+}
 
-document.getElementById("browser-import-folder").addEventListener("click", () => folderInput.click());
 document.getElementById("browser-open-game").addEventListener("click", () => {
   fileForm.reset();
   fileError.textContent = "";
@@ -185,5 +178,5 @@ function loadClassicScript(filename) {
 
 loadClassicScript("win31_apps.js")
   .then(() => loadClassicScript("win31.js"))
-  .then(() => setupLibraryPrompt({ chooseFolder: () => folderInput.click(), loadArchiveFiles, showStatus }))
+  .then(() => setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStatus }))
   .catch((error) => { browserStatus().textContent = error.message; });

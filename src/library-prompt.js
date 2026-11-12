@@ -1,7 +1,5 @@
 import { connectDrive, hasDriveConfiguration, prepareDriveConnection } from "./drive-auth.js";
 
-const DISMISS_KEY = "retro-library-prompt-dismissed";
-
 export function driveErrorMessage(error) {
   if (error?.status === 401) return "Google Drive access expired. Reconnect to continue.";
   if (error?.status === 403 || error?.status === 404) {
@@ -11,17 +9,34 @@ export function driveErrorMessage(error) {
   return error instanceof Error ? error.message : "Could not open the game library.";
 }
 
-export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus }) {
+export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStatus }) {
   const dialog = document.getElementById("browser-library-dialog");
+  const intro = document.getElementById("browser-library-intro");
   const errorText = document.getElementById("browser-library-error");
+  const downloadLink = document.getElementById("browser-download-library");
   const connectButton = document.getElementById("browser-connect-drive");
   const changeButton = document.getElementById("browser-change-drive");
   const zipInput = document.getElementById("browser-library-zip");
-  let dismissed = false;
+  const folderInput = document.getElementById("browser-library-folder");
+  const defaultIntro = intro.textContent;
   let ready = false;
   let busy = false;
+  let libraryLoaded = false;
 
-  try { dismissed = sessionStorage.getItem(DISMISS_KEY) === "1"; } catch { /* Session storage can be blocked. */ }
+  function updateDownloadLink() {
+    const fileId = new URLSearchParams(window.location.hash.slice(1)).get("library");
+    const valid = fileId && /^[A-Za-z0-9_-]{15,150}$/.test(fileId);
+    downloadLink.hidden = !valid;
+    if (!valid) {
+      downloadLink.removeAttribute("href");
+      intro.textContent = defaultIntro;
+      return;
+    }
+    const url = new URL("https://drive.google.com/uc?export=download");
+    url.searchParams.set("id", fileId);
+    downloadLink.href = url.href;
+    intro.textContent = "Download the family ZIP from Google Drive. When it finishes, return here and open the ZIP from Downloads.";
+  }
 
   async function prepare() {
     connectButton.disabled = true;
@@ -43,7 +58,8 @@ export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus 
     errorText.textContent = message;
     dialog.returnValue = "";
     dialog.showModal();
-    if (hasDriveConfiguration && !ready) void prepare();
+    if (!message && !downloadLink.hidden) downloadLink.focus();
+    if (hasDriveConfiguration && !ready && !connectButton.disabled) void prepare();
   }
 
   async function connect(selectFile) {
@@ -54,7 +70,7 @@ export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus 
     }
 
     busy = true;
-    dialog.close("connect");
+    dialog.close();
     showStatus("Connecting to Google Drive…");
     let message = "";
     let canceled = false;
@@ -69,6 +85,7 @@ export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus 
       const { openDriveLibrary } = await import("./drive-library.js");
       const files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
       await loadArchiveFiles(files, "drive");
+      libraryLoaded = true;
       changeButton.hidden = false;
     } catch (error) {
       message = driveErrorMessage(error);
@@ -85,38 +102,50 @@ export function setupLibraryPrompt({ chooseFolder, loadArchiveFiles, showStatus 
     connectButton.addEventListener("click", () => void connect(false));
     changeButton.addEventListener("click", () => void connect(true));
   }
-  dialog.addEventListener("close", () => {
-    if (dialog.returnValue === "connect") return;
-    dismissed = true;
-    try { sessionStorage.setItem(DISMISS_KEY, "1"); } catch { /* Session storage can be blocked. */ }
-  });
-  document.getElementById("browser-choose-zip").addEventListener("click", () => zipInput.click());
-  zipInput.addEventListener("change", async () => {
-    const file = zipInput.files[0];
-    zipInput.value = "";
-    if (!file || busy) return;
+  async function loadLocal(status, load) {
+    if (busy) return;
     busy = true;
-    dialog.close();
-    showStatus("Reading the game library ZIP…");
+    if (dialog.open) dialog.close();
+    showStatus(status);
     let message = "";
     try {
-      const { openLocalLibrary } = await import("./drive-library.js");
-      const files = await openLocalLibrary(file, AbortSignal.timeout(45_000));
-      await loadArchiveFiles(files, "zip");
+      await load();
+      libraryLoaded = true;
     } catch (error) {
       message = error?.name === "TimeoutError"
         ? "Reading the ZIP took too long. Make sure it’s available on this device, then try again."
-        : error instanceof Error ? error.message : "Could not open the library ZIP.";
+        : error instanceof Error ? error.message : "Could not load the game library.";
       showStatus(message);
     } finally {
       busy = false;
       if (message) show(message);
     }
+  }
+
+  document.getElementById("browser-choose-zip").addEventListener("click", () => zipInput.click());
+  zipInput.addEventListener("change", () => {
+    const file = zipInput.files[0];
+    zipInput.value = "";
+    if (!file) return;
+    void loadLocal("Reading the game library ZIP…", async () => {
+      const { openLocalLibrary } = await import("./drive-library.js");
+      const files = await openLocalLibrary(file, AbortSignal.timeout(45_000));
+      await loadArchiveFiles(files, "zip");
+    });
   });
-  document.getElementById("browser-choose-folder").addEventListener("click", () => {
-    dialog.close();
-    chooseFolder();
+  const chooseFolder = () => folderInput.click();
+  document.getElementById("browser-choose-folder").addEventListener("click", chooseFolder);
+  document.getElementById("browser-import-folder").addEventListener("click", chooseFolder);
+  folderInput.addEventListener("change", () => {
+    const files = Array.from(folderInput.files);
+    folderInput.value = "";
+    if (files.length) void loadLocal("Reading game folder…", () => loadFolderFiles(files));
   });
   document.getElementById("browser-load-library").addEventListener("click", () => show());
-  if (!dismissed) show();
+  window.addEventListener("hashchange", () => {
+    updateDownloadLink();
+    if (!libraryLoaded && !downloadLink.hidden) show();
+  });
+  updateDownloadLink();
+  show();
 }

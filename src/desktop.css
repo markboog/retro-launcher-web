@@ -66,6 +66,7 @@
 .browser-file-buttons { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
 .browser-file-buttons [hidden] { display: none; }
 .browser-library-form .browser-file-body { gap: 12px; }
+#browser-download-library { text-decoration: none; }
 #browser-game-error,
 #browser-library-error { color: #780000; }
 #browser-game-error:empty,
