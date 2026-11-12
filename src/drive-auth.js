@@ -130,11 +130,16 @@ export function libraryFileIdFromUrl() {
   return typeof candidate === "string" && /^[A-Za-z0-9_-]{15,150}$/.test(candidate) ? candidate : null;
 }
 
-export async function connectDrive({ selectFile = false, existingSelection = null } = {}) {
+export async function connectDrive({
+  selectFile = false,
+  existingSelection = null,
+  restrictedFileId = null,
+  switchAccount = selectFile,
+} = {}) {
   if (!pickerLoaded) throw new Error("Prepare the Google Drive connection before connecting.");
   const token = existingSelection
     ? { value: existingSelection.getToken(), getToken: existingSelection.getToken }
-    : await requestAccessToken({ prompt: selectFile ? "select_account" : "" });
+    : await requestAccessToken({ prompt: switchAccount ? "select_account" : "" });
   if (!token) return null;
   const getToken = token.getToken || (() => {
     if (Date.now() >= token.expiresAt) {
@@ -146,34 +151,50 @@ export async function connectDrive({ selectFile = false, existingSelection = nul
   });
 
   if (!selectFile) {
-    const urlFileId = libraryFileIdFromUrl();
-    if (urlFileId) {
-      return { fileId: urlFileId, resourceKey: null, getToken };
-    }
     const remembered = readRememberedSelection();
+    if (restrictedFileId) {
+      return {
+        fileId: restrictedFileId,
+        resourceKey: remembered?.fileId === restrictedFileId ? remembered.resourceKey : null,
+        getToken,
+      };
+    }
     if (remembered) return { ...remembered, getToken };
   }
-  const selected = await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const { projectNumber, pickerKey } = configuration();
     const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS);
     view.setMimeTypes("application/zip,application/x-zip-compressed");
     view.setIncludeFolders(false);
+    view.setMode(window.google.picker.DocsViewMode.LIST);
+    if (restrictedFileId) {
+      if (typeof view.setFileIds !== "function") {
+        reject(new Error("Google Picker cannot restrict this selection to the required Drive file."));
+        return;
+      }
+      view.setFileIds(restrictedFileId);
+    }
     // Leaving ownership unset shows owned files and files shared with the user.
     const picker = new window.google.picker.PickerBuilder()
       .addView(view)
       .setOAuthToken(token.value)
       .setDeveloperKey(pickerKey)
       .setAppId(projectNumber)
-      .setTitle("Select your RetroLauncher game library ZIP")
+      .setTitle(restrictedFileId
+        ? "Select this RetroLauncher game library ZIP"
+        : "Select your RetroLauncher game library ZIP")
       .setCallback((data) => {
         if (data.action === window.google.picker.Action.CANCEL) resolve(null);
         if (data.action !== window.google.picker.Action.PICKED) return;
         const doc = data.docs?.[0];
         if (!doc?.id) { reject(new Error("Google Picker did not return a file ID.")); return; }
+        if (restrictedFileId && doc.id !== restrictedFileId) {
+          reject(new Error("Google Picker returned a different file than the required RetroLauncher library."));
+          return;
+        }
         resolve({ fileId: doc.id, resourceKey: doc.resourceKey || null, getToken });
       })
       .build();
-    try { picker.setVisible(true); } catch (error) { reject(error); }
+    picker.setVisible(true);
   });
-  return selected;
 }

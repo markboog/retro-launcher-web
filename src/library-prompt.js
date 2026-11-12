@@ -16,18 +16,22 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   const downloadLink = document.getElementById("browser-download-library");
   const connectButton = document.getElementById("browser-connect-drive");
   const changeButton = document.getElementById("browser-change-drive");
+  const driveDescription = document.getElementById("browser-drive-description");
   const zipInput = document.getElementById("browser-library-zip");
   const folderInput = document.getElementById("browser-library-folder");
   const driveBox = document.getElementById("box-connect-drive");
   const divider = document.getElementById("library-divider");
-  const defaultIntro = intro.textContent;
   let ready = false;
   let busy = false;
   let libraryLoaded = false;
 
-  function updateDownloadLink() {
+  function updateLibraryTarget() {
     const fileId = libraryFileIdFromUrl();
     const valid = Boolean(fileId);
+    driveDescription.textContent = valid
+      ? "Sign in with the Google account invited to the family library. If Google asks for approval, select the family ZIP."
+      : "Connect Google Drive to open a game library ZIP.";
+    changeButton.textContent = valid ? "Switch Google Account" : "Change Drive ZIP";
     downloadLink.hidden = !valid;
     if (!valid) {
       downloadLink.removeAttribute("href");
@@ -67,20 +71,22 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
     if (hasDriveConfiguration && !ready && !connectButton.disabled) void prepare();
   }
 
-  async function connect(selectFile) {
+  async function connect(switchAccount = false) {
     if (busy) return;
     if (!ready) {
       await prepare();
       return;
     }
 
+    const fileId = libraryFileIdFromUrl();
+    const selectFile = switchAccount && !fileId;
     busy = true;
     dialog.close();
     showStatus("Connecting to Google Drive…");
     let message = "";
     let canceled = false;
     try {
-      let selection = await connectDrive({ selectFile });
+      let selection = await connectDrive({ selectFile, switchAccount, restrictedFileId: fileId });
       if (!selection) {
         canceled = true;
         showStatus("Google Drive connection canceled.");
@@ -93,13 +99,21 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
         files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
       } catch (directError) {
         if (!selectFile && (directError?.status === 403 || directError?.status === 404)) {
-          showStatus("Please select the family ZIP in Google Drive to grant access…");
-          selection = await connectDrive({ selectFile: true, existingSelection: selection });
+          showStatus(fileId
+            ? "Approve the family library in Google Drive…"
+            : "Select a ZIP in Google Drive to grant access…");
+          selection = await connectDrive({
+            selectFile: true,
+            existingSelection: selection,
+            restrictedFileId: fileId,
+          });
           if (!selection) {
             canceled = true;
+            if (fileId) message = "If the family ZIP was missing, switch Google accounts or ask for a Drive invitation.";
             showStatus("Google Drive connection canceled.");
             return;
           }
+          showStatus("Reading the game library from Google Drive…");
           files = await openDriveLibrary({ ...selection, signal: AbortSignal.timeout(45_000) });
         } else {
           throw directError;
@@ -115,6 +129,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
       showStatus(message);
     } finally {
       busy = false;
+      if (canceled && fileId) changeButton.hidden = false;
       if (message || canceled) show(message);
     }
   }
@@ -122,7 +137,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   if (hasDriveConfiguration) {
     if (driveBox) driveBox.hidden = false;
     if (divider) divider.hidden = false;
-    connectButton.addEventListener("click", () => void connect(false));
+    connectButton.addEventListener("click", () => void connect());
     changeButton.addEventListener("click", () => void connect(true));
   } else {
     if (driveBox) driveBox.hidden = true;
@@ -169,9 +184,9 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   });
   document.getElementById("browser-load-library").addEventListener("click", () => show());
   window.addEventListener("hashchange", () => {
-    updateDownloadLink();
+    updateLibraryTarget();
     if (!libraryLoaded && !downloadLink.hidden) show();
   });
-  updateDownloadLink();
+  updateLibraryTarget();
   show();
 }
