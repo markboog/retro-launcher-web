@@ -2,6 +2,7 @@ import "./desktop.css";
 import { describeFile, SYSTEMS } from "./library.js";
 import { installLegacyApi } from "./legacy-api.js";
 import { driveErrorMessage, setupLibraryPrompt } from "./library-prompt.js";
+import { listDosFolderGames } from "./dos-library.js";
 
 const demo = {
   id: "browser_snake",
@@ -31,6 +32,20 @@ window.retroBrowserArtwork = (id) => id === demo.id
 const archiveLabels = { drive: "Google Drive", zip: "the library ZIP" };
 
 async function browserGame(source, system, archive) {
+  if (source?.dos) {
+    return {
+      id: `browser_dos:${source.webkitRelativePath.toLowerCase()}`,
+      title: source.dos.title,
+      system: "dos",
+      platform: "dos",
+      filename: source.name,
+      genre: "Classic",
+      desc: "MS-DOS game. Runs inside the browser with DOSBox.",
+      archive,
+      loadDos: source.loadDos,
+      startup: source.dos.startup,
+    };
+  }
   const { file, ...info } = describeFile(source, system);
   const input = new TextEncoder().encode(archive ? `${archive}:${info.id}` : info.id);
   const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
@@ -49,14 +64,16 @@ async function browserGame(source, system, archive) {
 let activeSession = null;
 
 async function play(game, setupMode) {
-  if (setupMode || !Object.hasOwn(SYSTEMS, game.system)) {
+  const isDos = game.system === "dos" && typeof game.loadDos === "function";
+  if (setupMode || (!isDos && !Object.hasOwn(SYSTEMS, game.system))) {
     return { success: false, message: "This game needs the Windows edition." };
   }
 
   window.closeWindow(windowId);
   const width = Math.max(260, Math.min(720, window.innerWidth - 42));
   const height = Math.max(230, Math.min(540, window.innerHeight - 140));
-  const win = window.createMdiWindow(windowId, game.title, "icons/gameboy.svg", 32, 26, width, height, true);
+  const icon = isDos ? "icons/floppy.svg" : "icons/gameboy.svg";
+  const win = window.createMdiWindow(windowId, game.title, icon, 32, 26, width, height, true);
   window.restoreWindow(windowId);
   win.client.classList.add("browser-player-client");
 
@@ -87,27 +104,39 @@ async function play(game, setupMode) {
 
   try {
     if (game.archive) progress.textContent = `Loading game from ${archiveLabels[game.archive]}…`;
-    const fileRequest = game.loadFile
-      ? game.loadFile(AbortSignal.any([controller.signal, AbortSignal.timeout(45_000)]))
-      : game.file;
-    const [{ startGame }, file] = await Promise.all([import("./emulator.js"), fileRequest]);
-    if (activeSession !== session) return { success: false, message: "The player was closed." };
-    const url = file ? URL.createObjectURL(file) : game.url;
-    if (file) session.release = () => URL.revokeObjectURL(url);
-
-    const handle = await startGame({
-      container: display, system: game.system, title: game.title, url,
-      onStatus: ({ state, message }) => {
+    const loadSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(isDos ? 90_000 : 45_000)]);
+    const playerOptions = {
+      container: display,
+      title: game.title,
+      onStatus({ state, message }) {
         if (activeSession !== session) return;
         progress.textContent = message;
         if (state === "error") browserStatus().textContent = message;
       },
-    });
-    if (activeSession === session) session.player = handle;
-    else handle.stop();
+    };
+    let handle;
+    if (isDos) {
+      const [{ startDosGame }, files] = await Promise.all([import("./dos-player.js"), game.loadDos(loadSignal)]);
+      controller.signal.throwIfAborted();
+      handle = await startDosGame({ ...playerOptions, files, startup: game.startup, signal: controller.signal });
+    } else {
+      const fileRequest = game.loadFile ? game.loadFile(loadSignal) : game.file;
+      const [{ startGame }, file] = await Promise.all([import("./emulator.js"), fileRequest]);
+      controller.signal.throwIfAborted();
+      const url = file ? URL.createObjectURL(file) : game.url;
+      if (file) session.release = () => URL.revokeObjectURL(url);
+      handle = await startGame({ ...playerOptions, system: game.system, url });
+    }
+    if (activeSession !== session) {
+      handle.stop();
+      return { success: false, canceled: true };
+    }
+    session.player = handle;
+    if (isDos) await handle.ready;
+    if (activeSession !== session) return { success: false, canceled: true };
     return { success: true, message: "Opened " + game.title + " in the browser player" };
   } catch (error) {
-    if (activeSession !== session) return { success: false, message: "The player was closed." };
+    if (activeSession !== session) return { success: false, canceled: true };
     progress.textContent = game.archive === "drive" ? driveErrorMessage(error)
       : error instanceof Error ? error.message : "The game player could not start.";
     return { success: false, message: progress.textContent };
@@ -139,7 +168,8 @@ async function loadArchiveFiles(files, source) {
 }
 
 async function loadFolderFiles(files) {
-  const games = await Promise.all(files.map((file) => browserGame(file).catch(() => null)));
+  const candidates = [...files, ...listDosFolderGames(files)];
+  const games = await Promise.all(candidates.map((file) => browserGame(file).catch(() => null)));
   const imported = games.filter(Boolean);
   if (!imported.length) throw new Error("No supported browser games found in that folder.");
   for (const game of imported) catalog.set(game.id, game);

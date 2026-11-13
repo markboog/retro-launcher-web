@@ -175,6 +175,7 @@ export function installLegacyApi({ initialGames = [], launch, openLibrary } = {}
       if (typeof launch !== "function") return responseJson({ success: false, message: "Game launch is unavailable in this browser." }, 501);
       try {
         const result = await launch(game, payload.setup_mode === true);
+        if (result?.canceled === true) return responseJson({ success: false, canceled: true });
         if (result?.success === false || result?.error) {
           return responseJson({ success: false, message: result.message || result.error || "Could not launch game." }, 500);
         }

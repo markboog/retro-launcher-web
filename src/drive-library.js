@@ -1,4 +1,5 @@
 import { describeFile } from "./library.js";
+import { catalogDosArchiveEntries } from "./dos-library.js";
 
 const API_ROOT = "https://www.googleapis.com/drive/v3/files/";
 const RANGE_SIZE = 2 * 1024 * 1024;
@@ -113,7 +114,7 @@ function parseEntries(bytes, expectedCount) {
     if (offset + recordLength > bytes.length) throw new DriveLibraryError("The ZIP directory is truncated.");
     const name = decoder.decode(bytes.subarray(offset + 46, offset + 46 + nameLength)).replaceAll("\\", "/");
     if (!(flags & 1) && SUPPORTED_METHODS.has(method) && size > 0 && size <= MAX_GAME_SIZE && compressedSize <= MAX_GAME_SIZE && localOffset !== 0xffffffff) {
-      entries.push({ name, size, compressedSize, crc, method, localOffset });
+      entries.push({ name, size, compressedSize, crc, method, localOffset, nameLength, flags });
     }
     offset += recordLength;
     records += 1;
@@ -248,7 +249,8 @@ async function openArchive(totalSize, readRange, signal) {
   const directory = directoryEntries(tail, totalSize);
   if (directory.count === 0) return [];
   const rawDirectory = await readRange(directory.offset, directory.offset + directory.size, signal);
-  const candidates = parseEntries(rawDirectory, directory.count)
+  const archiveEntries = parseEntries(rawDirectory, directory.count);
+  const candidates = archiveEntries
     .filter((entry) => safeGamePath(entry.name))
     .filter((entry) => {
       try {
@@ -259,7 +261,7 @@ async function openArchive(totalSize, readRange, signal) {
       }
     });
 
-  return candidates.map((entry) => {
+  const cartridgeEntries = candidates.map((entry) => {
     const name = entry.name.split("/").at(-1);
     return {
       name,
@@ -300,4 +302,152 @@ async function openArchive(totalSize, readRange, signal) {
       },
     };
   });
+  const dosEntries = catalogDosArchiveEntries(
+    archiveEntries.filter((entry) => !(entry.flags & 1) && SUPPORTED_METHODS.has(entry.method) && entry.localOffset !== 0xffffffff),
+    (files, loadSignal) => loadDosArchiveFiles(files, totalSize, readRange, loadSignal),
+  );
+  return [...cartridgeEntries, ...dosEntries];
+}
+
+const MAX_DOS_GAME_SIZE = 64 * 1024 * 1024;
+const MAX_DOS_FETCHES_IN_FLIGHT = 6;
+const MAX_DOS_RANGE_GAP = 64 * 1024;
+const MAX_DOS_COMPRESSED_RANGE_BYTES = 96 * 1024 * 1024;
+
+async function loadDosArchiveFiles(files, totalSize, readRange, signal) {
+  if (signal?.aborted) propagateSignalError(undefined, signal);
+  const boundedFiles = files.filter((entry) => Number.isSafeInteger(entry.localOffset) && entry.localOffset >= 0 &&
+    Number.isSafeInteger(entry.compressedSize) && entry.compressedSize > 0 && entry.compressedSize <= MAX_DOS_GAME_SIZE &&
+    Number.isSafeInteger(entry.size) && entry.size > 0 && entry.size <= MAX_DOS_GAME_SIZE);
+  const declaredSize = boundedFiles.reduce((sum, entry) => sum + entry.size, 0);
+  const declaredCompressedSize = boundedFiles.reduce((sum, entry) => sum + entry.compressedSize, 0);
+  if (boundedFiles.length !== files.length || !boundedFiles.length || boundedFiles.length > 512 ||
+      declaredSize > MAX_DOS_GAME_SIZE || declaredCompressedSize > MAX_DOS_GAME_SIZE) {
+    throw new DriveLibraryError("The DOS game exceeds safe extraction limits.");
+  }
+  const rangeController = new AbortController();
+  const abortPendingRanges = () => rangeController.abort(signal?.reason);
+  if (signal?.aborted) abortPendingRanges();
+  else signal?.addEventListener("abort", abortPendingRanges, { once: true });
+  const rangeSignal = rangeController.signal;
+  const decoder = new TextDecoder("utf-8");
+  const localEntries = new Array(boundedFiles.length);
+  let nextHeader = 0;
+  const readHeaders = Array.from({ length: Math.min(MAX_DOS_FETCHES_IN_FLIGHT, boundedFiles.length) }, async () => {
+    while (true) {
+      if (rangeSignal.aborted) propagateSignalError(undefined, rangeSignal);
+      const index = nextHeader++;
+      if (index >= boundedFiles.length) return;
+      const entry = boundedFiles[index];
+      if (entry.localOffset + 30 + entry.nameLength > totalSize) throw new DriveLibraryError("A DOS game ZIP header is outside the archive.");
+      const header = await readRange(entry.localOffset, entry.localOffset + 30 + entry.nameLength, rangeSignal);
+      const view = new DataView(header.buffer, header.byteOffset, 30);
+      if (view.getUint32(0, true) !== 0x04034b50) throw new DriveLibraryError("A DOS game ZIP entry header is malformed.");
+      const flags = view.getUint16(6, true);
+      const method = view.getUint16(8, true);
+      const localCrc = view.getUint32(14, true);
+      const localCompressedSize = view.getUint32(18, true);
+      const localSize = view.getUint32(22, true);
+      const localNameLength = view.getUint16(26, true);
+      const localExtraLength = view.getUint16(28, true);
+      if ((flags & 1) || method !== entry.method || localNameLength !== entry.nameLength ||
+          decoder.decode(header.subarray(30)).replaceAll("\\", "/") !== entry.name ||
+          (localCompressedSize !== 0 && localCompressedSize !== entry.compressedSize) ||
+          (localSize !== 0 && localSize !== entry.size) || (localCrc !== 0 && localCrc !== entry.crc)) {
+        throw new DriveLibraryError("A DOS game ZIP entry header does not match its directory record.");
+      }
+      const dataStart = entry.localOffset + 30 + localNameLength + localExtraLength;
+      const dataEnd = dataStart + entry.compressedSize;
+      if (!Number.isSafeInteger(dataEnd) || dataEnd > totalSize) throw new DriveLibraryError("A DOS game ZIP entry data is outside the archive.");
+      localEntries[index] = { entry, dataStart, dataEnd };
+    }
+  });
+  try {
+    await Promise.all(readHeaders);
+
+    const sortedExtents = localEntries.slice().sort((left, right) => left.dataStart - right.dataStart);
+    const ranges = [];
+    for (const extent of sortedExtents) {
+      let range = ranges.at(-1);
+      if (!range || extent.dataStart - range.end > MAX_DOS_RANGE_GAP || extent.dataEnd - range.start > MAX_DOS_GAME_SIZE) {
+        range = { start: extent.dataStart, end: extent.dataEnd, extents: [] };
+        ranges.push(range);
+      } else {
+        range.end = Math.max(range.end, extent.dataEnd);
+      }
+      range.extents.push(extent);
+    }
+    if (ranges.reduce((sum, range) => sum + range.end - range.start, 0) > MAX_DOS_COMPRESSED_RANGE_BYTES) {
+      throw new DriveLibraryError("The DOS game ZIP ranges exceed safe download limits.");
+    }
+    let nextRange = 0;
+    const readRanges = Array.from({ length: Math.min(MAX_DOS_FETCHES_IN_FLIGHT, ranges.length) }, async () => {
+      while (true) {
+        if (rangeSignal.aborted) propagateSignalError(undefined, rangeSignal);
+        const index = nextRange++;
+        if (index >= ranges.length) return;
+        const range = ranges[index];
+        if (range.end <= range.start || range.end - range.start > MAX_DOS_GAME_SIZE) throw new DriveLibraryError("The DOS game ZIP layout exceeds safe extraction limits.");
+        range.bytes = await readRange(range.start, range.end, rangeSignal);
+      }
+    });
+    await Promise.all(readRanges);
+    for (const range of ranges) {
+      for (const extent of range.extents) {
+        const start = extent.dataStart - range.start;
+        extent.compressed = range.bytes.subarray(start, start + extent.entry.compressedSize);
+      }
+    }
+  } catch (error) {
+    rangeController.abort(error);
+    throw error;
+  } finally {
+    signal?.removeEventListener("abort", abortPendingRanges);
+  }
+
+  const result = [];
+  let total = 0;
+  for (const { entry, compressed } of localEntries) {
+    if (signal?.aborted) propagateSignalError(undefined, signal);
+    const source = new Blob([compressed]);
+    let output;
+    try {
+      output = entry.method === 0 ? source.stream() : source.stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    } catch {
+      throw new DriveLibraryError("This browser cannot safely decompress the selected DOS game.");
+    }
+    const reader = output.getReader();
+    const chunks = [];
+    let size = 0;
+    let crc = 0xffffffff;
+    try {
+      while (true) {
+        if (signal?.aborted) {
+          await reader.cancel();
+          propagateSignalError(undefined, signal);
+        }
+        const part = await reader.read();
+        if (part.done) break;
+        size += part.value.byteLength;
+        total += part.value.byteLength;
+        if (size > entry.size || size > MAX_DOS_GAME_SIZE || total > MAX_DOS_GAME_SIZE) {
+          await reader.cancel();
+          throw new DriveLibraryError("The DOS game expanded beyond its declared size.");
+        }
+        crc = updateCrc(crc, part.value);
+        chunks.push(part.value);
+      }
+    } catch (error) {
+      if (error instanceof DriveLibraryError) throw error;
+      propagateSignalError(error, signal);
+      throw new DriveLibraryError("The DOS game ZIP entry could not be decompressed.");
+    } finally {
+      reader.releaseLock();
+    }
+    if (size !== entry.size || ((crc ^ 0xffffffff) >>> 0) !== entry.crc) {
+      throw new DriveLibraryError("The DOS game ZIP entry failed its size or checksum check.");
+    }
+    result.push({ path: entry.path, bytes: new Uint8Array(await new Blob(chunks).arrayBuffer()) });
+  }
+  return result;
 }

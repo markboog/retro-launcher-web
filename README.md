@@ -7,9 +7,9 @@ The Retro Game Suite 3.11 Program Manager desktop, ported to static web hosting.
 - To use a local copy, choose **Download Family ZIP**, then **Open Library ZIP** and select the saved archive. You can also choose a ZIP from Google Drive for desktop or import an extracted game folder. **Maybe later** dismisses the prompt for the current page. Reopen it from **File → Load Game Library**.
 - Open **Game Boy** and double-click **Game Boy Snake** to try the included demo. Click the game screen, press Enter to start, and use the arrow keys to steer. The [demo source and license](public/demo/README.md) are included.
 - Use **File → Open Game File** to play one local game. For a ZIP or BIN containing one game, choose its system.
-- The browser edition supports compatible Game Boy, Game Boy Color, Super Nintendo and Sega Genesis / Mega Drive ROMs. Use the Windows edition for DOS, Windows 3.1 Win16 and arcade emulators.
+- Open **DOS Classics** and double-click a game from the family library to run it in the Program Manager window. The browser loads DOSBox automatically. Click the game screen for keyboard input. Some original DOS titles take a few seconds to reach their menus. Use the Windows edition for Windows 3.1 Win16, arcade and disc images.
 
-Files you choose are read in the browser. The published site contains the licensed demo and no personal game library. The emulator engine is loaded from the versioned EmulatorJS CDN. Games start muted, and you can raise the volume in the player's controls. Imported games are available for the tab session and favorites are stored by this site in the browser.
+Files you choose are read in the browser. The published site contains the licensed demo and no personal game library. The browser loads the [js-dos runtime](public/vendor/js-dos/LICENSE-NOTICE.md) for DOS and EmulatorJS for Game Boy, Game Boy Color, Super Nintendo and Sega Genesis / Mega Drive. Games start muted, and you can raise the volume in the player's controls. Imported games stay available for the tab session. DOS in-game saves last until you close the player. Favorites are stored in the browser.
 
 ## Run locally
 

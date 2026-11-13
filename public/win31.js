@@ -1120,6 +1120,11 @@ async function launchGame(game, setup_mode = false) {
       body: JSON.stringify({ id: game.id, setup_mode: setup_mode })
     });
     const result = await resp.json();
+    if (requestId !== activeLaunchRequest) return;
+    if (result.canceled) {
+      document.getElementById('status-selection').textContent = 'Launch canceled.';
+      return;
+    }
     if (result.success) {
       document.getElementById('status-selection').textContent = `✓ ${result.message}${result.pid ? ` (PID: ${result.pid})` : ''}`;
     } else {
@@ -1127,18 +1132,17 @@ async function launchGame(game, setup_mode = false) {
       alert(`Launch error:\n${result.message}`);
     }
   } catch (err) {
+    if (requestId !== activeLaunchRequest) return;
     document.getElementById('status-selection').textContent = `✕ Connection error launching game.`;
     console.error('Launch request error:', err);
   } finally {
-    // Keep indicator active briefly to cover the window activation transition
-    setTimeout(() => {
-      if (requestId !== activeLaunchRequest) return;
+    if (requestId === activeLaunchRequest) {
       document.body.classList.remove('cursor-wait');
       if (indicator) {
         indicator.classList.remove('show');
         indicator.removeAttribute('aria-busy');
       }
-    }, 1200);
+    }
   }
 }
 
