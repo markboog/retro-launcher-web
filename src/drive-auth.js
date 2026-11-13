@@ -125,9 +125,14 @@ export function readRememberedSelection() {
   return null;
 }
 
-export function libraryFileIdFromUrl() {
-  const candidate = new URLSearchParams(window.location.hash.slice(1)).get("library");
-  return typeof candidate === "string" && /^[A-Za-z0-9_-]{15,150}$/.test(candidate) ? candidate : null;
+export function libraryFileIdForLaunch(
+  hash = window.location.hash,
+  defaultFileId = import.meta.env?.VITE_DEFAULT_LIBRARY_FILE_ID?.trim() ?? "",
+) {
+  const linkedFileId = new URLSearchParams(hash.slice(1)).get("library");
+  const validFileId = /^[A-Za-z0-9_-]{15,150}$/;
+  if (linkedFileId && validFileId.test(linkedFileId)) return linkedFileId;
+  return validFileId.test(defaultFileId) ? defaultFileId : null;
 }
 
 export async function connectDrive({

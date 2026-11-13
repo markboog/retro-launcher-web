@@ -1,4 +1,4 @@
-import { connectDrive, hasDriveConfiguration, libraryFileIdFromUrl, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
+import { connectDrive, hasDriveConfiguration, libraryFileIdForLaunch, prepareDriveConnection, rememberSelection } from "./drive-auth.js";
 
 export function driveErrorMessage(error) {
   if (error?.status === 401) return "Google Drive access expired. Reconnect to continue.";
@@ -16,6 +16,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   const downloadLink = document.getElementById("browser-download-library");
   const connectButton = document.getElementById("browser-connect-drive");
   const changeButton = document.getElementById("browser-change-drive");
+  const driveTitle = document.getElementById("browser-drive-title");
   const driveDescription = document.getElementById("browser-drive-description");
   const zipInput = document.getElementById("browser-library-zip");
   const folderInput = document.getElementById("browser-library-folder");
@@ -25,13 +26,20 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
   let busy = false;
   let libraryLoaded = false;
 
+  function updateConnectButton() {
+    connectButton.textContent = libraryFileIdForLaunch() ? "Load Family Library" : "Connect Google Drive";
+  }
+
   function updateLibraryTarget() {
-    const fileId = libraryFileIdFromUrl();
+    const fileId = libraryFileIdForLaunch();
     const valid = Boolean(fileId);
+    if (ready) updateConnectButton();
+    driveTitle.textContent = valid ? "Family Library on Google Drive" : "Open from Google Drive";
     driveDescription.textContent = valid
       ? "Sign in with the Google account invited to the family library. If Google asks for approval, select the family ZIP."
       : "Connect Google Drive to open a game library ZIP.";
     changeButton.textContent = valid ? "Switch Google Account" : "Change Drive ZIP";
+    if (valid) changeButton.hidden = false;
     downloadLink.hidden = !valid;
     if (!valid) {
       downloadLink.removeAttribute("href");
@@ -46,16 +54,18 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
 
   async function prepare() {
     connectButton.disabled = true;
+    changeButton.disabled = true;
     connectButton.textContent = "Preparing Google Drive…";
     try {
       await prepareDriveConnection();
       ready = true;
-      connectButton.textContent = "Connect Google Drive";
+      updateConnectButton();
     } catch {
       errorText.textContent = "Google Drive could not connect. Try again or open the ZIP from this device.";
       connectButton.textContent = "Retry Google Drive";
     } finally {
       connectButton.disabled = false;
+      changeButton.disabled = false;
     }
   }
 
@@ -78,7 +88,7 @@ export function setupLibraryPrompt({ loadFolderFiles, loadArchiveFiles, showStat
       return;
     }
 
-    const fileId = libraryFileIdFromUrl();
+    const fileId = libraryFileIdForLaunch();
     const selectFile = switchAccount && !fileId;
     busy = true;
     dialog.close();
